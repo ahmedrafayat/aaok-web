@@ -5,9 +5,10 @@ require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 5000;
-const db = require('./config/db');
+const sequelize = require('./config/db');
 
-db.authenticate()
+sequelize
+  .authenticate()
   .then(() => {
     console.log('Connection has been established successfully');
   })

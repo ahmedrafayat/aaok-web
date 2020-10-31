@@ -1,4 +1,4 @@
-import { DATE, INTEGER, Model, Optional, Sequelize, STRING } from 'sequelize';
+import { DataTypes, Model, Optional, Sequelize } from 'sequelize';
 
 const sequelize: Sequelize = require('../config/db');
 
@@ -24,20 +24,21 @@ class FormModel
 FormModel.init(
   {
     id: {
-      type: INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER.UNSIGNED,
       primaryKey: true,
     },
     title: {
-      type: STRING(50),
+      type: DataTypes.STRING(50),
     },
     createdAt: {
-      type: DATE,
+      type: DataTypes.DATE,
     },
     updatedAt: {
-      type: DATE,
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
     },
   },
-  { tableName: 'forms', sequelize }
+  { tableName: 'forms', timestamps: true, sequelize }
 );
 
 export const Form = FormModel;

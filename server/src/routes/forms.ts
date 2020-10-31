@@ -1,16 +1,18 @@
-import {Request, Response} from "express";
-import {Form} from '../models/Form'
+import { Request, Response } from 'express';
+import { Form } from '../models/Form';
+import { Router } from 'express';
 
-const express = require('express')
-const router = express.Router()
+const router = Router();
 
 router.get('/', (req: Request, res: Response) => {
-    Form.findAll().then((forms) => {
-        res.send(forms)
-    }).catch(err => {
-        console.log(err)
-        res.send(err)
+  Form.findAll()
+    .then((forms) => {
+      res.send(forms);
     })
-})
+    .catch((err) => {
+      console.log(err);
+      res.send(err);
+    });
+});
 
-module.exports = router
+module.exports = router;

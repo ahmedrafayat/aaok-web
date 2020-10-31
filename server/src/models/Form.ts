@@ -1,40 +1,43 @@
-import {DATE, INTEGER, Model, Optional, Sequelize, STRING} from 'sequelize'
+import { DATE, INTEGER, Model, Optional, Sequelize, STRING } from 'sequelize';
 
-const sequelize: Sequelize = require('../config/db')
+const sequelize: Sequelize = require('../config/db');
 
 export interface FormAttributes {
-    id: number;
-    title: string;
-    createdAt: string;
-    updatedAt: string;
+  id: number;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-interface FormCreationAttributes extends Optional<FormAttributes, "id"> {
+type FormCreationAttributes = Optional<FormAttributes, 'id'>;
+
+class FormModel
+  extends Model<FormAttributes, FormCreationAttributes>
+  implements FormAttributes {
+  public id!: number;
+  public title!: string;
+
+  public readonly createdAt!: string;
+  public readonly updatedAt!: string;
 }
 
-class FormModel extends Model<FormAttributes, FormCreationAttributes> implements FormAttributes {
-    public id!: number;
-    public title!: string;
-
-    public readonly createdAt!: string;
-    public readonly updatedAt!: string;
-}
-
-FormModel.init({
+FormModel.init(
+  {
     id: {
-        type: INTEGER.UNSIGNED,
-        primaryKey: true,
+      type: INTEGER.UNSIGNED,
+      primaryKey: true,
     },
     title: {
-        type: STRING(50),
+      type: STRING(50),
     },
     createdAt: {
-        type: DATE
+      type: DATE,
     },
     updatedAt: {
-        type: DATE
-    }
-}, {tableName: 'forms', sequelize})
+      type: DATE,
+    },
+  },
+  { tableName: 'forms', sequelize }
+);
 
 export const Form = FormModel;
-

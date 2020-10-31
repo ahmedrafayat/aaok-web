@@ -1,5 +1,3 @@
-require('dotenv').config()
-
 const baseConfig = {
   development: {
     username: process.env.DB_USER,
@@ -22,5 +20,5 @@ const baseConfig = {
     host: process.env.DB_HOST,
     dialect: process.env.DB_DIALECT,
   },
-}
-module.exports = baseConfig
+};
+module.exports = baseConfig;

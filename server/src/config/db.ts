@@ -1,6 +1,6 @@
-import {Sequelize} from "sequelize";
+import { Sequelize } from 'sequelize';
 
-const configurations = require('./config')
+const configurations = require('./config');
 
 module.exports = new Sequelize(
   configurations.development.database,
@@ -9,5 +9,5 @@ module.exports = new Sequelize(
   {
     host: configurations.development.host,
     dialect: configurations.development.dialect,
-  },
-)
+  }
+);

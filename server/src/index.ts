@@ -3,6 +3,7 @@ import express from 'express';
 
 require('dotenv').config();
 
+const bodyParser = require('body-parser');
 const app = express();
 const port = process.env.PORT || 5000;
 const sequelize = require('./config/db');
@@ -16,8 +17,10 @@ sequelize
     console.log('Unable to connect to the database: ', err);
   });
 
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(`${process.env.API_BASE_URL}/forms`, require('./routes/forms'));
 app.use(`${process.env.API_BASE_URL}/questions`, require('./routes/questions'));
+// app.use(`${process.env.API_BASE_URL}/answers`, require('./routes/answers'));
 
 app.listen(port, () => {
   console.log(`Express server is running on localhost:${port}`);

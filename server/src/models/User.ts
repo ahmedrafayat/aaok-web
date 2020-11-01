@@ -1,4 +1,4 @@
-import { Model, Optional, DataTypes } from 'sequelize';
+import { Model, Optional, DataTypes, Sequelize } from 'sequelize';
 
 const sequelize = require('../config/db');
 
@@ -49,14 +49,15 @@ User.init(
     },
     createdAt: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
       allowNull: false,
       field: 'created_at',
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     updatedAt: {
       type: DataTypes.DATE,
       allowNull: false,
       field: 'updated_at',
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
   },
   { tableName: 'users', timestamps: true, sequelize }

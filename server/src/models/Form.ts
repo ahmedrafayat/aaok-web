@@ -12,7 +12,10 @@ interface FormAttributes {
   updatedAt: string;
 }
 
-type FormCreationAttributes = Optional<FormAttributes, 'formId'>;
+type FormCreationAttributes = Optional<
+  FormAttributes,
+  'formId' | 'createdAt' | 'updatedAt'
+>;
 
 export class Form
   extends Model<FormAttributes, FormCreationAttributes>
@@ -33,22 +36,26 @@ Form.init(
       field: 'form_id',
     },
     title: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.STRING(200),
       allowNull: false,
+      validate: {
+        len: [1, 50],
+      },
     },
     description: {
       type: DataTypes.STRING,
     },
     createdAt: {
       type: DataTypes.DATE,
-      allowNull: false,
       field: 'created_at',
+      allowNull: false,
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     updatedAt: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      allowNull: false,
       field: 'updated_at',
+      allowNull: false,
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
   },
   { tableName: 'forms', timestamps: true, sequelize }

@@ -1,4 +1,4 @@
-import { DataTypes, Model, Optional } from 'sequelize';
+import { DataTypes, Model, Optional, Sequelize } from 'sequelize';
 import { QuestionType } from '../enums/QuestionType';
 
 const sequelize = require('../config/db');
@@ -47,14 +47,17 @@ Question.init(
     },
     createdAt: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
       allowNull: false,
       field: 'created_at',
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     updatedAt: {
       type: DataTypes.DATE,
       allowNull: false,
       field: 'updated_at',
+      defaultValue: Sequelize.literal(
+        'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'
+      ),
     },
   },
   {

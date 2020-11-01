@@ -1,25 +1,24 @@
-import { Form } from './Form';
 import { DataTypes, Model, Optional } from 'sequelize';
 import { QuestionType } from '../enums/QuestionType';
 
 const sequelize = require('../config/db');
 
 export interface QuestionAttributes {
-  question_id: number;
-  form_id: number;
+  questionId: number;
+  formId: number;
   questionText: string;
   type: QuestionType;
   createdAt: string;
   updatedAt: string;
 }
 
-type QuestionCreationAttributes = Optional<QuestionAttributes, 'question_id'>;
+type QuestionCreationAttributes = Optional<QuestionAttributes, 'questionId'>;
 
 export class Question
   extends Model<QuestionAttributes, QuestionCreationAttributes>
   implements QuestionAttributes {
-  public question_id!: number;
-  public form_id!: number;
+  public questionId!: number;
+  public formId!: number;
   public questionText!: string;
   public type!: QuestionType;
   public createdAt!: string;
@@ -28,16 +27,19 @@ export class Question
 
 Question.init(
   {
-    question_id: {
+    questionId: {
       type: DataTypes.INTEGER.UNSIGNED,
       primaryKey: true,
+      field: 'question_id',
     },
-    form_id: {
+    formId: {
       type: DataTypes.INTEGER.UNSIGNED,
+      field: 'form_id',
     },
     questionText: {
       type: DataTypes.STRING,
       allowNull: false,
+      field: 'question_text',
     },
     type: {
       type: DataTypes.STRING,
@@ -47,10 +49,12 @@ Question.init(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
       allowNull: false,
+      field: 'created_at',
     },
     updatedAt: {
       type: DataTypes.DATE,
       allowNull: false,
+      field: 'updated_at',
     },
   },
   {

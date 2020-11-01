@@ -4,19 +4,19 @@ import { DataTypes, Model, Optional, Sequelize } from 'sequelize';
 const sequelize: Sequelize = require('../config/db');
 
 export interface FormAttributes {
-  form_id: number;
+  formId: number;
   title: string;
   description: string;
   createdAt: string;
   updatedAt: string;
 }
 
-type FormCreationAttributes = Optional<FormAttributes, 'form_id'>;
+type FormCreationAttributes = Optional<FormAttributes, 'formId'>;
 
 export class Form
   extends Model<FormAttributes, FormCreationAttributes>
   implements FormAttributes {
-  public form_id!: number;
+  public formId!: number;
   public title!: string;
   public description!: string;
 
@@ -26,9 +26,10 @@ export class Form
 
 Form.init(
   {
-    form_id: {
+    formId: {
       type: DataTypes.INTEGER.UNSIGNED,
       primaryKey: true,
+      field: 'form_id',
     },
     title: {
       type: DataTypes.STRING(50),
@@ -40,11 +41,13 @@ Form.init(
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,
+      field: 'created_at',
     },
     updatedAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
       allowNull: false,
+      field: 'updated_at',
     },
   },
   { tableName: 'forms', timestamps: true, sequelize }

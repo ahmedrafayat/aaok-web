@@ -17,6 +17,7 @@ sequelize
   });
 
 app.use(`${process.env.API_BASE_URL}/forms`, require('./routes/forms'));
+app.use(`${process.env.API_BASE_URL}/questions`, require('./routes/questions'));
 
 app.listen(port, () => {
   console.log(`Express server is running on localhost:${port}`);

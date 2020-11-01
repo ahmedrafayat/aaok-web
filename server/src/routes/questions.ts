@@ -1,14 +1,27 @@
 import { Question } from '../models/Question';
-import { Request, Response, Router } from 'express';
+import { Router } from 'express';
 
 const router = Router();
 
-router.get('/', (req: Request, res: Response) => {
+router.get('/', (req, res) => {
   Question.findAll()
-    .then((questions) => {
-      res.send(questions);
-    })
-    .catch((err) => res.send(err));
+    .then((questions) => res.send(questions))
+    .catch((err) => {
+      console.log(err);
+      res.send(err);
+    });
+});
+
+// Fetch all questions for a form
+router.get('/form/:formId', (req, res) => {
+  Question.findAll({
+    where: { formId: req.params.formId },
+  })
+    .then((questions) => res.send(questions))
+    .catch((err) => {
+      console.log(err);
+      res.send(err);
+    });
 });
 
 module.exports = router;

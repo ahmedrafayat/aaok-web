@@ -1,44 +1,55 @@
+import { Question } from './Question';
 import { DataTypes, Model, Optional, Sequelize } from 'sequelize';
 
 const sequelize: Sequelize = require('../config/db');
 
 export interface FormAttributes {
-  id: number;
+  form_id: number;
   title: string;
+  description: string;
   createdAt: string;
   updatedAt: string;
 }
 
-type FormCreationAttributes = Optional<FormAttributes, 'id'>;
+type FormCreationAttributes = Optional<FormAttributes, 'form_id'>;
 
-class FormModel
+export class Form
   extends Model<FormAttributes, FormCreationAttributes>
   implements FormAttributes {
-  public id!: number;
+  public form_id!: number;
   public title!: string;
+  public description!: string;
 
   public readonly createdAt!: string;
   public readonly updatedAt!: string;
 }
 
-FormModel.init(
+Form.init(
   {
-    id: {
+    form_id: {
       type: DataTypes.INTEGER.UNSIGNED,
       primaryKey: true,
     },
     title: {
       type: DataTypes.STRING(50),
+      allowNull: false,
+    },
+    description: {
+      type: DataTypes.STRING,
     },
     createdAt: {
       type: DataTypes.DATE,
+      allowNull: false,
     },
     updatedAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
+      allowNull: false,
     },
   },
   { tableName: 'forms', timestamps: true, sequelize }
 );
 
-export const Form = FormModel;
+Form.hasMany(Question, {
+  foreignKey: 'question_id',
+});

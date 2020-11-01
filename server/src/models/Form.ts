@@ -1,9 +1,10 @@
-import { Question } from './Question';
 import { DataTypes, Model, Optional, Sequelize } from 'sequelize';
+import { User } from './User';
+import { Question } from './Question';
 
 const sequelize: Sequelize = require('../config/db');
 
-export interface FormAttributes {
+interface FormAttributes {
   formId: number;
   title: string;
   description: string;
@@ -54,5 +55,5 @@ Form.init(
 );
 
 Form.hasMany(Question, {
-  foreignKey: 'question_id',
+  foreignKey: 'questionId',
 });

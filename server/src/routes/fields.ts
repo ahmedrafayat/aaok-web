@@ -1,23 +1,23 @@
-import { Question } from '../models/Question';
+import { Field } from '../models/Field';
 import { Router } from 'express';
 
 const router = Router();
 
 router.get('/', (req, res) => {
-  Question.findAll()
-    .then((questions) => res.send(questions))
+  Field.findAll()
+    .then((fields) => res.send(fields))
     .catch((err) => {
       console.log(err);
       res.send(err);
     });
 });
 
-// Fetch all questions for a form
+// Fetch all fields for a form
 router.get('/form/:formId', (req, res) => {
-  Question.findAll({
+  Field.findAll({
     where: { formId: req.params.formId },
   })
-    .then((questions) => res.send(questions))
+    .then((fields) => res.send(fields))
     .catch((err) => {
       console.log(err);
       res.send(err);

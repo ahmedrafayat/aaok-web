@@ -9,7 +9,7 @@ const port = process.env.PORT || 5000;
 const sequelize = require('./config/db');
 
 sequelize
-  .authenticate()
+  .authenticate({ logging: console.log })
   .then(() => {
     console.log('Connection has been established successfully');
   })
@@ -19,7 +19,7 @@ sequelize
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(`${process.env.API_BASE_URL}/forms`, require('./routes/forms'));
-app.use(`${process.env.API_BASE_URL}/questions`, require('./routes/questions'));
+app.use(`${process.env.API_BASE_URL}/fields`, require('./routes/fields'));
 // app.use(`${process.env.API_BASE_URL}/answers`, require('./routes/answers'));
 
 app.listen(port, () => {

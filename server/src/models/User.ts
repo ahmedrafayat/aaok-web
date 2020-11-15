@@ -8,11 +8,15 @@ interface UserAttributes {
   lastName: string;
   email: string;
   password: string;
+  isActive: number;
   createdAt: string;
   updatedAt: string;
 }
 
-type UserCreationAttributes = Optional<UserAttributes, 'userId'>;
+type UserCreationAttributes = Optional<
+  UserAttributes,
+  'userId' | 'createdAt' | 'updatedAt'
+>;
 
 export class User
   extends Model<UserAttributes, UserCreationAttributes>
@@ -22,6 +26,7 @@ export class User
   public lastName!: string;
   public email!: string;
   public password!: string;
+  public isActive!: number;
   public createdAt!: string;
   public updatedAt!: string;
 }
@@ -47,17 +52,20 @@ User.init(
     password: {
       type: DataTypes.STRING,
     },
+    isActive: {
+      type: DataTypes.INTEGER,
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,
       field: 'created_at',
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+      defaultValue: Sequelize.literal('NOW()'),
     },
     updatedAt: {
       type: DataTypes.DATE,
       allowNull: false,
       field: 'updated_at',
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+      defaultValue: Sequelize.literal('NOW()'),
     },
   },
   { tableName: 'users', timestamps: true, sequelize }

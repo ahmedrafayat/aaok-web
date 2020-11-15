@@ -1,6 +1,5 @@
 import { DataTypes, Model, Optional, Sequelize } from 'sequelize';
-import { User } from './User';
-import { Question } from './Question';
+import { Field } from './Field';
 
 const sequelize: Sequelize = require('../config/db');
 
@@ -31,16 +30,13 @@ export class Form
 Form.init(
   {
     formId: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       primaryKey: true,
       field: 'form_id',
     },
     title: {
-      type: DataTypes.STRING(200),
+      type: DataTypes.STRING,
       allowNull: false,
-      validate: {
-        len: [1, 50],
-      },
     },
     description: {
       type: DataTypes.STRING,
@@ -48,19 +44,22 @@ Form.init(
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',
-      allowNull: false,
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+      defaultValue: Sequelize.literal('NOW()'),
     },
     updatedAt: {
       type: DataTypes.DATE,
       field: 'updated_at',
-      allowNull: false,
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+      defaultValue: Sequelize.literal('NOW()'),
     },
   },
-  { tableName: 'forms', timestamps: true, sequelize }
+  {
+    tableName: 'forms',
+    freezeTableName: true,
+    timestamps: true,
+    sequelize,
+  }
 );
 
-Form.hasMany(Question, {
-  foreignKey: 'questionId',
+Form.hasMany(Field, {
+  foreignKey: 'fieldId',
 });

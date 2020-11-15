@@ -24,7 +24,7 @@ router.post('/', async (req, res) => {
       description,
     });
     console.log('validation', await newForm.validate());
-    newForm.save();
+    await newForm.save();
     res.send({
       title: newForm.title,
       description: newForm.description,

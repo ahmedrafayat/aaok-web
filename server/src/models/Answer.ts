@@ -1,6 +1,4 @@
 import { Form } from './Form';
-import { Question } from './Question';
-import { User } from './User';
 import { Model, Optional, DataTypes, Sequelize } from 'sequelize';
 
 const sequelize = require('../config/db');
@@ -69,6 +67,4 @@ Answer.init(
   { tableName: 'answers', timestamps: true, sequelize }
 );
 
-Answer.belongsTo(User);
-Answer.belongsTo(Question);
 Answer.belongsTo(Form);

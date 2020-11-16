@@ -8,4 +8,6 @@ export enum FieldType {
   NAME_OR_ANONYMOUS,
   TEXTAREA,
   PHOTO,
+  TICK_LIST,
+  SIGNATURE,
 }

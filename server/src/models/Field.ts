@@ -8,8 +8,8 @@ export interface FieldAttributes {
   formId: number;
   fieldKey: string;
   label: string;
-  field_type: FieldType;
-  json_config: never;
+  fieldType: FieldType;
+  jsonConfig: never;
   createdAt: string;
   updatedAt: string;
 }
@@ -26,8 +26,8 @@ export class Field
   public formId!: number;
   public fieldKey!: string;
   public label!: string;
-  public field_type!: FieldType;
-  public json_config!: never;
+  public fieldType!: FieldType;
+  public jsonConfig!: never;
   public createdAt!: string;
   public updatedAt!: string;
 }
@@ -50,12 +50,14 @@ Field.init(
     label: {
       type: DataTypes.STRING,
     },
-    field_type: {
+    fieldType: {
       type: DataTypes.STRING,
       allowNull: false,
+      field: 'field_type',
     },
-    json_config: {
+    jsonConfig: {
       type: DataTypes.JSONB,
+      field: 'json_config',
     },
     createdAt: {
       type: DataTypes.DATE,

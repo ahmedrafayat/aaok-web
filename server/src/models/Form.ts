@@ -7,6 +7,7 @@ interface FormAttributes {
   formId: number;
   title: string;
   description: string;
+  managementOnly: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -22,6 +23,7 @@ export class Form
   public formId!: number;
   public title!: string;
   public description!: string;
+  public managementOnly!: boolean;
 
   public readonly createdAt!: string;
   public readonly updatedAt!: string;
@@ -40,6 +42,12 @@ Form.init(
     },
     description: {
       type: DataTypes.STRING,
+    },
+    managementOnly: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'management_only',
     },
     createdAt: {
       type: DataTypes.DATE,

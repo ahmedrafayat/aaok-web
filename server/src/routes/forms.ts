@@ -17,11 +17,12 @@ router.get('/', (req, res) => {
 
 // Create a new form
 router.post('/', async (req, res) => {
-  const { title, description } = req.body;
+  const { title, description, managementOnly } = req.body;
   try {
     const newForm = await Form.create({
       title,
       description,
+      managementOnly,
     });
     console.log('validation', await newForm.validate());
     await newForm.save();

@@ -1,6 +1,9 @@
-import { Model, Optional, DataTypes } from 'sequelize';
+import { genSalt, hash } from 'bcrypt';
+import { DataTypes, Model, Optional } from 'sequelize';
 
 const sequelize = require('../config/db');
+
+const SALT_ROUNDS = 10;
 
 interface UserAttributes {
   userId: number;
@@ -37,6 +40,8 @@ export class User
   public isEnabled!: number;
   public isRegistered!: number;
 
+  verifyPassword!: (password: string) => boolean;
+
   public createdAt!: string;
   public updatedAt!: string;
 }
@@ -62,6 +67,14 @@ User.init(
     email: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: {
+        name: 'Unique email Violation',
+        msg: 'This email is already is use',
+      },
+      validate: {
+        isEmail: true,
+        isLowercase: true,
+      },
     },
     password: {
       type: DataTypes.STRING,
@@ -79,16 +92,27 @@ User.init(
     },
     createdAt: {
       type: DataTypes.DATE,
-      allowNull: false,
+      allowNull: true,
       field: 'created_at',
       // defaultValue: Sequelize.literal('NOW()'),
     },
     updatedAt: {
       type: DataTypes.DATE,
-      allowNull: false,
+      allowNull: true,
       field: 'updated_at',
       // defaultValue: Sequelize.literal('NOW()'),
     },
   },
-  { tableName: 'users', freezeTableName: true, timestamps: true, sequelize }
+  {
+    hooks: {
+      beforeCreate: async (user) => {
+        const salt = await genSalt(SALT_ROUNDS);
+        user.password = await hash(user.password, salt);
+      },
+    },
+    tableName: 'users',
+    freezeTableName: true,
+    timestamps: true,
+    sequelize,
+  }
 );

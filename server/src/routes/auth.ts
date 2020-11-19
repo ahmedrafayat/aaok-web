@@ -1,3 +1,4 @@
+import { User } from '../models/User';
 import { Router } from 'express';
 import createError from 'http-errors';
 
@@ -8,6 +9,23 @@ router.post('/register', async (req, res, next) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) throw new createError.BadRequest();
+
+    const userDoesExist = await User.findOne({ where: { email: 'sadfsad' } });
+    console.log('userDoesExist', userDoesExist);
+    if (userDoesExist)
+      throw new createError.Conflict(`${email} is already been registered`);
+
+    let newUser;
+    try {
+      newUser = await User.create({
+        email: email,
+        password: String(password),
+      });
+    } catch (e) {
+      throw e;
+    }
+
+    res.send(newUser);
   } catch (e) {
     next(e);
   }

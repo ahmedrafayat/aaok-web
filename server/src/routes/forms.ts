@@ -16,7 +16,7 @@ router.get('/', (req, res) => {
 });
 
 // Create a new form
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   const { title, description, managementOnly } = req.body;
   try {
     const newForm = await Form.create({
@@ -31,7 +31,8 @@ router.post('/', async (req, res) => {
       description: newForm.description,
     });
   } catch (err) {
-    res.status(400).send(err.errors);
+    console.log(err);
+    // next(err);
   }
 });
 

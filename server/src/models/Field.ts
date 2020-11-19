@@ -38,6 +38,7 @@ Field.init(
       type: DataTypes.INTEGER.UNSIGNED,
       primaryKey: true,
       field: 'field_id',
+      autoIncrement: true,
     },
     formId: {
       type: DataTypes.INTEGER.UNSIGNED,

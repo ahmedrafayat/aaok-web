@@ -37,7 +37,6 @@ app.use(async (req, res, next) => {
 // @ts-ignore
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err, req, res, next) => {
-  res.status(err.status);
   res.send({
     error: {
       status: err.status || 500,

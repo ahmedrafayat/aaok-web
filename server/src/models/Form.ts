@@ -35,6 +35,7 @@ Form.init(
       type: DataTypes.INTEGER,
       primaryKey: true,
       field: 'form_id',
+      autoIncrement: true,
     },
     title: {
       type: DataTypes.STRING,

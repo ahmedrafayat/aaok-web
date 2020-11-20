@@ -35,9 +35,10 @@ export class Field
 Field.init(
   {
     fieldId: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       primaryKey: true,
       field: 'field_id',
+      autoIncrement: true,
     },
     formId: {
       type: DataTypes.INTEGER.UNSIGNED,

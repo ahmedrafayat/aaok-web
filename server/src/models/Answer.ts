@@ -33,6 +33,7 @@ Answer.init(
       type: DataTypes.INTEGER.UNSIGNED,
       primaryKey: true,
       field: 'answer_id',
+      autoIncrement: true,
     },
     formId: {
       type: DataTypes.INTEGER.UNSIGNED,
@@ -53,15 +54,11 @@ Answer.init(
       type: DataTypes.DATE,
       allowNull: false,
       field: 'created_at',
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     updatedAt: {
       type: DataTypes.DATE,
       allowNull: false,
       field: 'updated_at',
-      defaultValue: Sequelize.literal(
-        'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'
-      ),
     },
   },
   { tableName: 'answers', timestamps: true, sequelize }

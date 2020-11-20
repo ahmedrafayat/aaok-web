@@ -50,14 +50,16 @@ router.post('/register', async (req, res, next) => {
         .set('isRegistered', newUser.isRegistered)
         .set('isManagement', newUser.isManagement)
         .save();
-      const accessToken = await jwtUtil.signAccessToken({
+      const tokenPayload = {
         isManagement: savedUser.isManagement,
         email: savedUser.email,
         firstName: savedUser.firstName,
         lastName: savedUser.lastName,
-      });
+      };
+      const accessToken = await jwtUtil.signAccessToken(tokenPayload);
+      const refreshToken = await jwtUtil.signRefreshToken(tokenPayload);
       if (accessToken !== null) {
-        res.send({ accessToken });
+        res.send({ accessToken, refreshToken });
       }
     } else if (
       userExists !== null &&
@@ -120,21 +122,37 @@ router.post('/login', async (req, res, next) => {
     if (!isMatch)
       throw new createError.Unauthorized('Invalid username/password');
 
-    const accessToken = await jwtUtil.signAccessToken({
+    const tokenPayload = {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
       isManagement: user.isManagement,
-    });
-
-    res.send(accessToken);
+    };
+    const accessToken = await jwtUtil.signAccessToken(tokenPayload);
+    const refreshToken = await jwtUtil.signRefreshToken(tokenPayload);
+    if (accessToken && refreshToken) {
+      res.send({ accessToken, refreshToken });
+    } else throw new createError.InternalServerError();
   } catch (error) {
     next(error);
   }
 });
 
-router.post('/refresh-token', async (req, res) => {
-  res.send('refresh token route');
+router.post('/refresh-token', async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) throw new createError.BadRequest();
+    const tokenPayload = await jwtUtil.verifyRefreshToken(refreshToken);
+
+    const accessToken = await jwtUtil.signAccessToken(tokenPayload);
+    const refToken = await jwtUtil.signRefreshToken(tokenPayload);
+
+    if (accessToken && refToken) {
+      res.send({ accessToken, refreshToken: refToken });
+    } else throw new createError.InternalServerError();
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.delete('/logout', async (req, res) => {

@@ -14,13 +14,12 @@ type userData = {
 module.exports = {
   signAccessToken: async (userData: userData) => {
     return new Promise((resolve, reject) => {
-      console.log(userData);
       const payload = userData;
       const secret = process.env.ACCESS_TOKEN_SECRET;
       if (secret) {
         const options: SignOptions = {
           expiresIn: ms('1m'),
-          issuer: 'AAOKay.com',
+          issuer: process.env.HOST_URL || 'AAOKay',
         };
         JWT.sign(payload, secret, options, (err, token) => {
           if (err) {
@@ -32,6 +31,51 @@ module.exports = {
       } else {
         resolve(null);
       }
+    });
+  },
+  signRefreshToken: async (userData: userData) => {
+    return new Promise((resolve, reject) => {
+      const payload = userData;
+      const secret = process.env.REFRESH_TOKEN_SECRET;
+      if (secret) {
+        const options: SignOptions = {
+          expiresIn: ms('1y'),
+          issuer: process.env.HOST_URL || 'AAOKay',
+        };
+        JWT.sign(payload, secret, options, (err, token) => {
+          if (err) {
+            console.log(err.message);
+            reject(new createError.InternalServerError());
+          }
+          resolve(token);
+        });
+      } else {
+        resolve(null);
+      }
+    });
+  },
+  verifyRefreshToken: (refreshToken: string) => {
+    return new Promise((resolve, reject) => {
+      const secret = process.env.REFRESH_TOKEN_SECRET;
+      if (secret) {
+        JWT.verify(refreshToken, secret, (err, payload: any) => {
+          if (err) return reject(new createError.Unauthorized());
+          // const { firstName, lastName, isManagement, email } = payload;
+          if (
+            'firstName' in payload &&
+            'lastName' in payload &&
+            'isManagement' in payload &&
+            'email' in payload
+          ) {
+            return resolve({
+              firstName: payload.firstName,
+              lastName: payload.lastName,
+              isManagement: payload.isManagement,
+              email: payload.email,
+            });
+          } else throw new createError.Unauthorized('Invalid token');
+        });
+      } else throw new createError.Unauthorized();
     });
   },
 
@@ -47,7 +91,9 @@ module.exports = {
     if (secret) {
       JWT.verify(token, secret, (err, payload) => {
         if (err) {
-          return next(new createError.Unauthorized());
+          const message =
+            err.name === 'JsonWebTokenError' ? 'Unauthorized' : err.message;
+          return next(new createError.Unauthorized(message));
         }
         req.payload = payload;
         next();

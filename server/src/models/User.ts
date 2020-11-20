@@ -13,6 +13,7 @@ interface UserAttributes {
   password: string;
   isEnabled: number;
   isRegistered: number;
+  isManagement: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -39,8 +40,7 @@ export class User
   public password!: string;
   public isEnabled!: number;
   public isRegistered!: number;
-
-  verifyPassword!: (password: string) => boolean;
+  public isManagement!: number;
 
   public createdAt!: string;
   public updatedAt!: string;
@@ -90,6 +90,11 @@ User.init(
       field: 'is_registered',
       allowNull: true,
     },
+    isManagement: {
+      type: DataTypes.INTEGER,
+      field: 'is_management',
+      allowNull: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: true,
@@ -109,7 +114,12 @@ User.init(
         const salt = await genSalt(SALT_ROUNDS);
         user.password = await hash(user.password, salt);
       },
+      beforeUpdate: async (user) => {
+        const salt = await genSalt(SALT_ROUNDS);
+        user.password = await hash(user.password, salt);
+      },
     },
+
     tableName: 'users',
     freezeTableName: true,
     timestamps: true,

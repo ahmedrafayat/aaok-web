@@ -1,7 +1,8 @@
 import { SignOptions } from 'jsonwebtoken';
+import { compare } from 'bcrypt';
+import createError from 'http-errors';
 import JWT = require('jsonwebtoken');
 import ms = require('ms');
-import { compare } from 'bcrypt';
 
 type userData = {
   firstName: string;
@@ -22,7 +23,10 @@ module.exports = {
           issuer: 'AAOKay.com',
         };
         JWT.sign(payload, secret, options, (err, token) => {
-          if (err) return reject(err);
+          if (err) {
+            console.log(err.message);
+            reject(new createError.InternalServerError());
+          }
           resolve(token);
         });
       } else {
@@ -31,6 +35,25 @@ module.exports = {
     });
   },
 
+  verifyAccessToken: (req: any, res: any, next: any) => {
+    if (!req.headers['authorization'])
+      return next(new createError.Unauthorized());
+
+    const authHeader = req.headers['authorization'];
+    const bearerToken = authHeader.split(' ');
+    const token: string = bearerToken[1];
+    const secret = process.env.ACCESS_TOKEN_SECRET;
+
+    if (secret) {
+      JWT.verify(token, secret, (err, payload) => {
+        if (err) {
+          return next(new createError.Unauthorized());
+        }
+        req.payload = payload;
+        next();
+      });
+    }
+  },
   isValidPassword: async (password: string, userPassword: string) => {
     try {
       return await compare(password, userPassword);

@@ -1,19 +1,20 @@
+require('dotenv').config();
+
 import { ConnectionError } from 'sequelize';
 import express from 'express';
 import morgan from 'morgan';
-
-require('dotenv').config();
-
-const bodyParser = require('body-parser');
-const app = express();
 import createError = require('http-errors');
 
-const AuthRoute = require('./routes/auth');
-
 const port = process.env.PORT || 5000;
+const apiBaseUrl = process.env.API_BASE_URL;
+const app = express();
+const AuthRoute = require('./routes/auth');
+const sequelize = require('./config/db');
+const jwtUtils = require('./utils/jwtUtils');
 
 app.use(morgan('dev'));
-const sequelize = require('./config/db');
+app.use(express.urlencoded());
+app.use(express.json());
 
 sequelize
   .authenticate({ logging: console.log })
@@ -24,11 +25,17 @@ sequelize
     console.log('Unable to connect to the database: ', err);
   });
 
-app.use(bodyParser.urlencoded({ extended: false }));
-
-app.use(`${process.env.API_BASE_URL}/auth`, AuthRoute);
-app.use(`${process.env.API_BASE_URL}/forms`, require('./routes/forms'));
-app.use(`${process.env.API_BASE_URL}/fields`, require('./routes/fields'));
+app.use(`${apiBaseUrl}/auth`, AuthRoute);
+app.use(
+  `${apiBaseUrl}/forms`,
+  jwtUtils.verifyAccessToken,
+  require('./routes/forms')
+);
+app.use(
+  `${apiBaseUrl}/fields`,
+  jwtUtils.verifyAccessToken,
+  require('./routes/fields')
+);
 
 app.use(async (req, res, next) => {
   next(new createError.NotFound('Route Not Found'));

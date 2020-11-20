@@ -69,5 +69,10 @@ Form.init(
 );
 
 Form.hasMany(Field, {
-  foreignKey: 'fieldId',
+  foreignKey: 'fields_fk',
+  sourceKey: 'formId',
+});
+
+Field.belongsTo(Form, {
+  foreignKey: 'fields_fk',
 });

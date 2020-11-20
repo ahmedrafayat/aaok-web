@@ -16,6 +16,7 @@ router.get('/', async (req, res) => {
     fields.field_id "fieldId",
     fields."label",
     fields.field_type "fieldType",
+    fields.json_config "jsonConfig",
     fields.sort_order "sortOrder",
     forms.management_only "isManagementOnly"
   from

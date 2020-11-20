@@ -3,6 +3,7 @@ import { Router } from 'express';
 import createError from 'http-errors';
 import { UniqueConstraintError } from 'sequelize';
 
+const jwtUtil = require('../utils/jwtUtils');
 const router = Router();
 
 router.post('/register', async (req, res, next) => {
@@ -21,8 +22,14 @@ router.post('/register', async (req, res, next) => {
       },
       { validate: true }
     );
-
-    res.send(newUser);
+    const accessToken = await jwtUtil.signAccessToken(newUser.userId);
+    if (accessToken !== null) {
+      res.send({ accessToken });
+    } else {
+      throw new createError.InternalServerError(
+        'Could not generate access token'
+      );
+    }
   } catch (error) {
     if (error instanceof UniqueConstraintError) {
       // @ts-ignore

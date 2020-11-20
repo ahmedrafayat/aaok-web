@@ -6,7 +6,7 @@ require('dotenv').config();
 
 const bodyParser = require('body-parser');
 const app = express();
-const createError = require('http-errors');
+import createError = require('http-errors');
 
 const AuthRoute = require('./routes/auth');
 
@@ -31,11 +31,10 @@ app.use(`${process.env.API_BASE_URL}/forms`, require('./routes/forms'));
 app.use(`${process.env.API_BASE_URL}/fields`, require('./routes/fields'));
 
 app.use(async (req, res, next) => {
-  next(createError.NotFound('Route Not Found'));
+  next(new createError.NotFound('Route Not Found'));
 });
 
 // @ts-ignore
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err, req, res, next) => {
   res.send({
     error: {

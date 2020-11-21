@@ -49,7 +49,6 @@ export = {
         userExists.isEnabled
       ) {
         const savedUser = await userExists
-          .set('email', newUser.email)
           .set('password', newUser.password)
           .set('firstName', newUser.firstName)
           .set('lastName', newUser.lastName)

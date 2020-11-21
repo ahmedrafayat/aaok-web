@@ -4,11 +4,16 @@ import createError from 'http-errors';
 import JWT = require('jsonwebtoken');
 import ms = require('ms');
 
+import client = require('./initRedis');
+
+const YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
+
 type userData = {
   firstName: string;
   lastName: string;
   isManagement: number;
-  email: string;
+  // email: string;
+  id: number;
 };
 
 module.exports = {
@@ -46,39 +51,31 @@ module.exports = {
           if (err) {
             console.log(err.message);
             reject(new createError.InternalServerError());
+            return;
+          } else {
+            if (token)
+              client.SET(
+                String(userData.id),
+                token,
+                'EX',
+                YEAR_IN_SECONDS,
+                (err) => {
+                  if (err) {
+                    console.log(err.message);
+                    reject(new createError.InternalServerError());
+                    return;
+                  }
+                  return resolve(token);
+                }
+              );
+            else return;
           }
-          resolve(token);
         });
       } else {
         resolve(null);
       }
     });
   },
-  verifyRefreshToken: (refreshToken: string) => {
-    return new Promise((resolve, reject) => {
-      const secret = process.env.REFRESH_TOKEN_SECRET;
-      if (secret) {
-        JWT.verify(refreshToken, secret, (err, payload: any) => {
-          if (err) return reject(new createError.Unauthorized());
-          // const { firstName, lastName, isManagement, email } = payload;
-          if (
-            'firstName' in payload &&
-            'lastName' in payload &&
-            'isManagement' in payload &&
-            'email' in payload
-          ) {
-            return resolve({
-              firstName: payload.firstName,
-              lastName: payload.lastName,
-              isManagement: payload.isManagement,
-              email: payload.email,
-            });
-          } else throw new createError.Unauthorized('Invalid token');
-        });
-      } else throw new createError.Unauthorized();
-    });
-  },
-
   verifyAccessToken: (req: any, res: any, next: any) => {
     if (!req.headers['authorization'])
       return next(new createError.Unauthorized());
@@ -99,6 +96,41 @@ module.exports = {
         next();
       });
     }
+  },
+  verifyRefreshToken: (refreshToken: string) => {
+    return new Promise((resolve, reject) => {
+      const secret = process.env.REFRESH_TOKEN_SECRET;
+      if (secret) {
+        JWT.verify(refreshToken, secret, (err, payload: any) => {
+          if (err) return reject(new createError.Unauthorized());
+          if (
+            'firstName' in payload &&
+            'lastName' in payload &&
+            'isManagement' in payload &&
+            'id' in payload
+          ) {
+            const userId = payload.id;
+            client.GET(userId, (err, result) => {
+              if (err) {
+                console.log(err.message);
+                reject(new createError.InternalServerError());
+                return;
+              }
+
+              if (refreshToken === result)
+                return resolve({
+                  firstName: payload.firstName,
+                  lastName: payload.lastName,
+                  isManagement: payload.isManagement,
+                  // email: payload.email,
+                  id: payload.id,
+                });
+              else reject(createError.Unauthorized);
+            });
+          } else throw new createError.Unauthorized('Invalid token');
+        });
+      } else throw new createError.Unauthorized();
+    });
   },
   isValidPassword: async (password: string, userPassword: string) => {
     try {

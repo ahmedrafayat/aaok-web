@@ -52,7 +52,8 @@ router.post('/register', async (req, res, next) => {
         .save();
       const tokenPayload = {
         isManagement: savedUser.isManagement,
-        email: savedUser.email,
+        id: savedUser.userId,
+        // email: savedUser.email,
         firstName: savedUser.firstName,
         lastName: savedUser.lastName,
       };
@@ -125,7 +126,8 @@ router.post('/login', async (req, res, next) => {
     const tokenPayload = {
       firstName: user.firstName,
       lastName: user.lastName,
-      email: user.email,
+      // email: user.email,
+      id: user.userId,
       isManagement: user.isManagement,
     };
     const accessToken = await jwtUtil.signAccessToken(tokenPayload);

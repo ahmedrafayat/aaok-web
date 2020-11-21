@@ -1,14 +1,16 @@
+import { HttpException } from './models/HttpException';
+
 require('dotenv').config();
 
 import { ConnectionError } from 'sequelize';
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import morgan from 'morgan';
 import createError = require('http-errors');
+import AuthRoute = require('./routes/auth');
 
 const port = process.env.PORT || 5000;
 const apiBaseUrl = process.env.API_BASE_URL;
 const app = express();
-const AuthRoute = require('./routes/auth');
 const sequelize = require('./config/db');
 const jwtUtils = require('./utils/jwtUtils');
 
@@ -41,15 +43,17 @@ app.use(async (req, res, next) => {
   next(new createError.NotFound('Route Not Found'));
 });
 
-// @ts-ignore
-app.use((err, req, res, next) => {
-  res.send({
-    error: {
-      status: err.status || 500,
-      message: err.message,
-    },
-  });
-});
+app.use(
+  //@ts-ignore
+  (err: HttpException, req: Request, res: Response, _next: NextFunction) => {
+    res.send({
+      error: {
+        status: err.status || 500,
+        message: err.message,
+      },
+    });
+  }
+);
 
 app.listen(port, () => {
   console.log(`Express server is running on localhost:${port}`);

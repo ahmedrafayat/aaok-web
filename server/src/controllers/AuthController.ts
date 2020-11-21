@@ -64,7 +64,7 @@ export = {
         };
         const accessToken = await jwtUtil.signAccessToken(tokenPayload);
         const refreshToken = await jwtUtil.signRefreshToken(tokenPayload);
-        if (accessToken !== null) {
+        if (accessToken !== null && refreshToken !== null) {
           res.send({ accessToken, refreshToken });
         }
       } else if (

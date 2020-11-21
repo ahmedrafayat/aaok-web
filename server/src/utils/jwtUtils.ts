@@ -7,6 +7,8 @@ import client = require('./initRedis');
 import { NextFunction, Request, Response } from 'express';
 
 const YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
+const ACCESS_TOKEN_EXPIRY = '30m';
+const REFRESH_TOKEN_EXPIRY = '1y';
 
 type UserData = {
   firstName: string;
@@ -22,7 +24,7 @@ module.exports = {
       const secret = process.env.ACCESS_TOKEN_SECRET;
       if (secret) {
         const options: SignOptions = {
-          expiresIn: '30m',
+          expiresIn: ACCESS_TOKEN_EXPIRY,
           issuer: process.env.HOST_URL || 'AAOKay',
         };
         JWT.sign(payload, secret, options, (err, token) => {
@@ -43,7 +45,7 @@ module.exports = {
       const secret = process.env.REFRESH_TOKEN_SECRET;
       if (secret) {
         const options: SignOptions = {
-          expiresIn: '1y',
+          expiresIn: REFRESH_TOKEN_EXPIRY,
           issuer: process.env.HOST_URL || 'AAOKay',
         };
         JWT.sign(payload, secret, options, (err, token) => {
@@ -91,8 +93,6 @@ module.exports = {
             err.name === 'JsonWebTokenError' ? 'Unauthorized' : err.message;
           return next(new createError.Unauthorized(message));
         }
-        // @ts-ignore
-        // req.payload = payload;
         next();
       });
     }

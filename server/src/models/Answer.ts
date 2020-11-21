@@ -1,28 +1,43 @@
-import { Form } from './Form';
-import { Model, Optional, DataTypes, Sequelize } from 'sequelize';
+import { DataTypes, Model, Optional } from 'sequelize';
 
 const sequelize = require('../config/db');
 
+interface LocationValue {
+  latitude: number;
+  longitude: number;
+}
+
+interface GenericValue {
+  value: string;
+}
+
+interface CheckValue {
+  value: number[];
+}
+
+type ValueType = GenericValue | LocationValue | CheckValue;
+
 interface AnswerAttributes {
   answerId: number;
-  formId: number;
-  questionId: number;
-  userId: number;
-  value: string;
+  responseId: number;
+  fieldId: number;
+  value: ValueType;
   createdAt: string;
   updatedAt: string;
 }
 
-type AnswerCreationAttributes = Optional<AnswerAttributes, 'answerId'>;
+type AnswerCreationAttributes = Optional<
+  AnswerAttributes,
+  'answerId' | 'createdAt' | 'updatedAt'
+>;
 
 export class Answer
   extends Model<AnswerAttributes, AnswerCreationAttributes>
   implements AnswerAttributes {
   public answerId!: number;
-  public formId!: number;
-  public questionId!: number;
-  public userId!: number;
-  public value!: string;
+  public responseId!: number;
+  public fieldId!: number;
+  public value!: ValueType;
   public createdAt!: string;
   public updatedAt!: string;
 }
@@ -30,38 +45,35 @@ export class Answer
 Answer.init(
   {
     answerId: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       primaryKey: true,
       field: 'answer_id',
       autoIncrement: true,
     },
-    formId: {
-      type: DataTypes.INTEGER.UNSIGNED,
+    responseId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
+      field: 'response_id',
     },
-    questionId: {
-      type: DataTypes.INTEGER.UNSIGNED,
+    fieldId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
-    },
-    userId: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
+      field: 'field_id',
     },
     value: {
-      type: DataTypes.STRING,
+      type: DataTypes.JSONB,
+      allowNull: true,
     },
     createdAt: {
       type: DataTypes.DATE,
-      allowNull: false,
+      allowNull: true,
       field: 'created_at',
     },
     updatedAt: {
       type: DataTypes.DATE,
-      allowNull: false,
+      allowNull: true,
       field: 'updated_at',
     },
   },
-  { tableName: 'answers', timestamps: true, sequelize }
+  { tableName: 'answers', freezeTableName: true, timestamps: true, sequelize }
 );
-
-Answer.belongsTo(Form);

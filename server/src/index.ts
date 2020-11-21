@@ -17,6 +17,7 @@ const jwtUtils = require('./utils/jwtUtils');
 app.use(morgan('dev'));
 app.use(express.urlencoded());
 app.use(express.json());
+app.use(express.static('./public'));
 
 sequelize
   .authenticate({ logging: console.log })
@@ -39,6 +40,8 @@ app.use(
   require('./routes/fields')
 );
 
+app.use(`${apiBaseUrl}/upload`, require('./routes/upload'));
+
 app.use(async (req, res, next) => {
   next(new createError.NotFound('Route Not Found'));
 });
@@ -46,6 +49,7 @@ app.use(async (req, res, next) => {
 app.use(
   //@ts-ignore
   (err: HttpException, req: Request, res: Response, _next: NextFunction) => {
+    console.log('error occured');
     res.send({
       error: {
         status: err.status || 500,

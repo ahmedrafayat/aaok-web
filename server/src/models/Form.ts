@@ -1,5 +1,4 @@
 import { DataTypes, Model, Optional, Sequelize } from 'sequelize';
-import { Field } from './Field';
 
 const sequelize: Sequelize = require('../config/db');
 
@@ -69,11 +68,11 @@ Form.init(
   }
 );
 
-Form.hasMany(Field, {
-  foreignKey: 'fields_fk',
-  sourceKey: 'formId',
-});
+// Form.hasMany(Field, {
+//   foreignKey: 'fields_fk',
+//   sourceKey: 'formId',
+// });
 
-Field.belongsTo(Form, {
-  foreignKey: 'fields_fk',
-});
+// Field.belongsTo(Form, {
+//   foreignKey: 'fields_fk',
+// });

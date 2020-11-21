@@ -41,7 +41,7 @@ Response.init(
     formId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: 'field_id',
+      field: 'form_id',
     },
     createdAt: {
       type: DataTypes.DATE,

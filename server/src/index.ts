@@ -39,6 +39,11 @@ app.use(
   jwtUtils.verifyAccessToken,
   require('./routes/fields')
 );
+app.use(
+  `${apiBaseUrl}/submit-form`,
+  jwtUtils.verifyAccessToken,
+  require('./routes/response')
+);
 
 app.use(`${apiBaseUrl}/upload`, require('./routes/upload'));
 
@@ -49,7 +54,7 @@ app.use(async (req, res, next) => {
 app.use(
   //@ts-ignore
   (err: HttpException, req: Request, res: Response, _next: NextFunction) => {
-    console.log('error occured');
+    console.log('error occurred');
     res.send({
       error: {
         status: err.status || 500,

@@ -15,7 +15,7 @@ interface CheckValue {
   value: number[];
 }
 
-type ValueType = GenericValue | LocationValue | CheckValue;
+export type ValueType = GenericValue | LocationValue | CheckValue;
 
 interface AnswerAttributes {
   answerId: number;
@@ -26,7 +26,7 @@ interface AnswerAttributes {
   updatedAt: string;
 }
 
-type AnswerCreationAttributes = Optional<
+export type AnswerCreationAttributes = Optional<
   AnswerAttributes,
   'answerId' | 'createdAt' | 'updatedAt'
 >;
@@ -45,7 +45,7 @@ export class Answer
 Answer.init(
   {
     answerId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.BIGINT,
       primaryKey: true,
       field: 'answer_id',
       autoIncrement: true,

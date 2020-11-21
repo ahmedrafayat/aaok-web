@@ -4,6 +4,7 @@ import createError from 'http-errors';
 import JWT = require('jsonwebtoken');
 
 import client = require('./initRedis');
+import { NextFunction, Request, Response } from 'express';
 
 const YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
 
@@ -11,7 +12,6 @@ type UserData = {
   firstName: string;
   lastName: string;
   isManagement: number;
-  // email: string;
   id: number;
 };
 
@@ -75,7 +75,7 @@ module.exports = {
       }
     });
   },
-  verifyAccessToken: (req: any, res: any, next: any) => {
+  verifyAccessToken: (req: Request, res: Response, next: NextFunction) => {
     if (!req.headers['authorization'])
       return next(new createError.Unauthorized());
 
@@ -85,13 +85,14 @@ module.exports = {
     const secret = process.env.ACCESS_TOKEN_SECRET;
 
     if (secret) {
-      JWT.verify(token, secret, (err, payload) => {
+      JWT.verify(token, secret, (err) => {
         if (err) {
           const message =
             err.name === 'JsonWebTokenError' ? 'Unauthorized' : err.message;
           return next(new createError.Unauthorized(message));
         }
-        req.payload = payload;
+        // @ts-ignore
+        // req.payload = payload;
         next();
       });
     }
@@ -100,6 +101,7 @@ module.exports = {
     return new Promise((resolve, reject) => {
       const secret = process.env.REFRESH_TOKEN_SECRET;
       if (secret) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         JWT.verify(refreshToken, secret, (err, payload: any) => {
           if (err) return reject(new createError.Unauthorized());
           if (
@@ -121,7 +123,6 @@ module.exports = {
                   firstName: payload.firstName,
                   lastName: payload.lastName,
                   isManagement: payload.isManagement,
-                  // email: payload.email,
                   id: payload.id,
                 });
               else reject(createError.Unauthorized);

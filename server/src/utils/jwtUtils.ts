@@ -2,7 +2,6 @@ import { SignOptions } from 'jsonwebtoken';
 import { compare } from 'bcrypt';
 import createError from 'http-errors';
 import JWT = require('jsonwebtoken');
-import ms = require('ms');
 
 import client = require('./initRedis');
 
@@ -23,7 +22,7 @@ module.exports = {
       const secret = process.env.ACCESS_TOKEN_SECRET;
       if (secret) {
         const options: SignOptions = {
-          expiresIn: ms('1m'),
+          expiresIn: '30m',
           issuer: process.env.HOST_URL || 'AAOKay',
         };
         JWT.sign(payload, secret, options, (err, token) => {
@@ -44,7 +43,7 @@ module.exports = {
       const secret = process.env.REFRESH_TOKEN_SECRET;
       if (secret) {
         const options: SignOptions = {
-          expiresIn: ms('1y'),
+          expiresIn: '1y',
           issuer: process.env.HOST_URL || 'AAOKay',
         };
         JWT.sign(payload, secret, options, (err, token) => {

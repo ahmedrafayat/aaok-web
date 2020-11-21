@@ -3,6 +3,8 @@ import { Router } from 'express';
 import createError from 'http-errors';
 import { Op, UniqueConstraintError } from 'sequelize';
 
+import client = require('../utils/initRedis');
+
 const jwtUtil = require('../utils/jwtUtils');
 const router = Router();
 
@@ -158,7 +160,20 @@ router.post('/refresh-token', async (req, res, next) => {
 });
 
 router.delete('/logout', async (req, res) => {
-  res.send('logout route');
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) throw new createError.BadRequest();
+    const userData = await jwtUtil.verifyRefreshToken(refreshToken);
+
+    client.DEL(String(userData.id), (err, reply) => {
+      if (err) {
+        console.log(err.message);
+        throw new createError.InternalServerError();
+      }
+      console.log('User successfully logged out', reply);
+      res.send(204);
+    });
+  } catch (error) {}
 });
 
 module.exports = router;

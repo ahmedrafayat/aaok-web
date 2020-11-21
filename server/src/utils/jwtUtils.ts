@@ -7,7 +7,7 @@ import client = require('./initRedis');
 
 const YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
 
-type userData = {
+type UserData = {
   firstName: string;
   lastName: string;
   isManagement: number;
@@ -16,7 +16,7 @@ type userData = {
 };
 
 module.exports = {
-  signAccessToken: async (userData: userData) => {
+  signAccessToken: async (userData: UserData) => {
     return new Promise((resolve, reject) => {
       const payload = userData;
       const secret = process.env.ACCESS_TOKEN_SECRET;
@@ -37,7 +37,7 @@ module.exports = {
       }
     });
   },
-  signRefreshToken: async (userData: userData) => {
+  signRefreshToken: async (userData: UserData) => {
     return new Promise((resolve, reject) => {
       const payload = userData;
       const secret = process.env.REFRESH_TOKEN_SECRET;
@@ -96,7 +96,7 @@ module.exports = {
       });
     }
   },
-  verifyRefreshToken: (refreshToken: string) => {
+  verifyRefreshToken: (refreshToken: string): Promise<UserData> => {
     return new Promise((resolve, reject) => {
       const secret = process.env.REFRESH_TOKEN_SECRET;
       if (secret) {
@@ -126,9 +126,15 @@ module.exports = {
                 });
               else reject(createError.Unauthorized);
             });
-          } else throw new createError.Unauthorized('Invalid token');
+          } else
+            throw new createError.Unauthorized(
+              'Invalid token, please login again'
+            );
         });
-      } else throw new createError.Unauthorized();
+      } else {
+        console.log('Refresh Token not found');
+        throw new createError.InternalServerError();
+      }
     });
   },
   isValidPassword: async (password: string, userPassword: string) => {

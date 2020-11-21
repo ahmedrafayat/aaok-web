@@ -99,13 +99,11 @@ User.init(
       type: DataTypes.DATE,
       allowNull: true,
       field: 'created_at',
-      // defaultValue: Sequelize.literal('NOW()'),
     },
     updatedAt: {
       type: DataTypes.DATE,
       allowNull: true,
       field: 'updated_at',
-      // defaultValue: Sequelize.literal('NOW()'),
     },
   },
   {
@@ -119,7 +117,6 @@ User.init(
         user.password = await hash(user.password, salt);
       },
     },
-
     tableName: 'users',
     freezeTableName: true,
     timestamps: true,

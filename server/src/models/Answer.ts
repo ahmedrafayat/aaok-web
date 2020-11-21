@@ -1,27 +1,33 @@
 import { DataTypes, Model, Optional } from 'sequelize';
+import { FieldType } from '../enums/FieldType';
 
 const sequelize = require('../config/db');
 
-interface LocationValue {
-  latitude: number;
-  longitude: number;
+interface ValueType {
+  type: FieldType;
 }
 
-interface GenericValue {
-  value: string;
+export class LocationValue implements ValueType {
+  constructor(
+    public latitude: number,
+    public longitude: number,
+    public type: FieldType
+  ) {}
 }
 
-interface CheckValue {
-  value: number[];
+export class GenericValue implements ValueType {
+  constructor(public value: string, public type: FieldType) {}
 }
 
-export type ValueType = GenericValue | LocationValue | CheckValue;
+export class CheckValue implements ValueType {
+  constructor(public value: number[], public type: FieldType) {}
+}
 
 interface AnswerAttributes {
   answerId: number;
   responseId: number;
   fieldId: number;
-  value: ValueType;
+  value: LocationValue | GenericValue | CheckValue;
   createdAt: string;
   updatedAt: string;
 }
@@ -37,7 +43,7 @@ export class Answer
   public answerId!: number;
   public responseId!: number;
   public fieldId!: number;
-  public value!: ValueType;
+  public value!: LocationValue | GenericValue | CheckValue;
   public createdAt!: string;
   public updatedAt!: string;
 }

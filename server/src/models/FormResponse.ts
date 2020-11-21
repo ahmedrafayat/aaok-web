@@ -2,7 +2,7 @@ import { DataTypes, Model, Optional } from 'sequelize';
 
 const sequelize = require('../config/db');
 
-interface ResponseAttributes {
+interface FormResponseAttributes {
   responseId: number;
   userId: number;
   formId: number;
@@ -10,14 +10,14 @@ interface ResponseAttributes {
   updatedAt: string;
 }
 
-type ResponseCreationAttributes = Optional<
-  ResponseAttributes,
+type FormResponseCreationAttributes = Optional<
+  FormResponseAttributes,
   'responseId' | 'userId' | 'createdAt' | 'updatedAt'
 >;
 
-export class Response
-  extends Model<ResponseAttributes, ResponseCreationAttributes>
-  implements ResponseAttributes {
+export class FormResponse
+  extends Model<FormResponseAttributes, FormResponseCreationAttributes>
+  implements FormResponseAttributes {
   public responseId!: number;
   public userId!: number;
   public formId!: number;
@@ -25,7 +25,7 @@ export class Response
   public updatedAt!: string;
 }
 
-Response.init(
+FormResponse.init(
   {
     responseId: {
       type: DataTypes.INTEGER,

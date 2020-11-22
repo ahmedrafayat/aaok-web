@@ -87,12 +87,14 @@ module.exports = {
     const secret = process.env.ACCESS_TOKEN_SECRET;
 
     if (secret) {
-      JWT.verify(token, secret, (err) => {
+      JWT.verify(token, secret, (err, payload) => {
         if (err) {
           const message =
             err.name === 'JsonWebTokenError' ? 'Unauthorized' : err.message;
           return next(new createError.Unauthorized(message));
         }
+        // @ts-ignore
+        req.payload = payload;
         next();
       });
     }

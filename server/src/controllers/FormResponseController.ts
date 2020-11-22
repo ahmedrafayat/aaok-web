@@ -4,6 +4,7 @@ import { FormResponse } from '../models/FormResponse';
 import { Transaction } from 'sequelize';
 import { Answer, AnswerCreationAttributes } from '../models/Answer';
 import formResponseUtil = require('../utils/formResponseUtils');
+import createHttpError from 'http-errors';
 
 const sequelize = require('../config/db');
 
@@ -61,7 +62,11 @@ export = {
       res.send(result);
     } catch (error) {
       console.log(error);
-      next(error);
+      next(
+        new createHttpError.InternalServerError(
+          'Could not submit your response. Please contact an administrator'
+        )
+      );
     }
   },
 };

@@ -7,6 +7,7 @@ import formResponseUtil = require('../utils/formResponseUtils');
 import createHttpError from 'http-errors';
 
 const sequelize = require('../config/db');
+const DEFAULT_PAGE_SIZE = 10;
 
 export = {
   submitForm: async (
@@ -67,6 +68,31 @@ export = {
           'Could not submit your response. Please contact an administrator'
         )
       );
+    }
+  },
+  getResponseWithPagination: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const size = Number(req.query.size) || DEFAULT_PAGE_SIZE;
+      const pageIndex = Number(req.query.page) || 1;
+
+      const startIndex = (pageIndex - 1) * size;
+
+      const result = await FormResponse.findAll({
+        order: [
+          ['createdAt', 'DESC'],
+          ['response_id', 'ASC'],
+        ],
+        limit: size,
+        offset: startIndex,
+      });
+
+      res.send(result);
+    } catch (error) {
+      next(error);
     }
   },
 };

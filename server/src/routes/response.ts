@@ -5,4 +5,6 @@ const router = Router();
 
 router.post('/:formId', FormResponseController.submitForm);
 
+router.get('/', FormResponseController.getResponseWithPagination);
+
 module.exports = router;

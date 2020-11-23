@@ -39,13 +39,18 @@ app.use(
   jwtUtils.verifyAccessToken,
   require('./routes/fields')
 );
+
 app.use(
-  `${apiBaseUrl}/submit-form`,
+  `${apiBaseUrl}/response`,
   jwtUtils.verifyAccessToken,
   require('./routes/response')
 );
 
-app.use(`${apiBaseUrl}/upload`, require('./routes/upload'));
+app.use(
+  `${apiBaseUrl}/upload`,
+  jwtUtils.verifyAccessToken,
+  require('./routes/upload')
+);
 
 app.use(async (req, res, next) => {
   next(new createError.NotFound('Route Not Found'));

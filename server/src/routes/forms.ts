@@ -4,7 +4,7 @@ import FormController = require('../controllers/FormController');
 const router = Router();
 
 // Fetch all forms
-router.get('/', FormController.getFormsWithFields);
+router.get('/fields', FormController.getFormsWithFields);
 
 // Create a new form
 router.post('/', FormController.createNewForm);

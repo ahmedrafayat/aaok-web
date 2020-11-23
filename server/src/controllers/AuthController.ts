@@ -135,7 +135,6 @@ export = {
       const tokenPayload = {
         firstName: user.firstName,
         lastName: user.lastName,
-        // email: user.email,
         id: user.userId,
         isManagement: user.isManagement,
       };

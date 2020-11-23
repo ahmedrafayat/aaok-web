@@ -191,4 +191,56 @@ export = {
       next(error);
     }
   },
+
+  adminLogin: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password)
+        throw new createError.BadRequest('Invalid Username/Password');
+
+      const user = await User.findOne({
+        where: {
+          email: {
+            [Op.iLike]: email,
+          },
+        },
+      });
+
+      if (user === null) {
+        throw new createError.NotFound('User Not Registered');
+      }
+
+      if (!user.isEnabled || !user.isManagement) {
+        throw new createError.Unauthorized(
+          'You are not allowed to access this site'
+        );
+      }
+
+      const isMatch = await isValidPassword(password, user.password);
+      if (!isMatch)
+        throw new createError.Unauthorized('Invalid username/password');
+
+      const tokenPayload = {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        id: user.userId,
+        isManagement: user.isManagement,
+      };
+      const accessToken = await jwtUtil.signAccessToken(tokenPayload);
+      const refreshToken = await jwtUtil.signRefreshToken(tokenPayload);
+      if (accessToken && refreshToken) {
+        res.send({ accessToken, refreshToken });
+      } else throw new createError.InternalServerError();
+    } catch (error) {
+      next(error);
+    }
+  },
 };
+
+async function isValidPassword(
+  enteredPassword: string,
+  actualPassword: string
+) {
+  return await jwtUtil.isValidPassword(enteredPassword, actualPassword);
+}

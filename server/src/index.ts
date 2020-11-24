@@ -8,6 +8,7 @@ import morgan from 'morgan';
 import compression from 'compression';
 import createError = require('http-errors');
 import AuthRoute = require('./routes/auth');
+import cors from 'cors';
 
 const port = process.env.PORT || 5000;
 const apiBaseUrl = process.env.API_BASE_URL;
@@ -17,6 +18,7 @@ const jwtUtils = require('./utils/jwtUtils');
 
 app.use(compression());
 app.use(morgan('dev'));
+app.use(cors());
 app.use(express.urlencoded());
 app.use(express.json());
 app.use(express.static('./public'));

@@ -3,8 +3,9 @@ import { Field } from '../models/Field';
 import { FormResponse } from '../models/FormResponse';
 import { Transaction } from 'sequelize';
 import { Answer, AnswerCreationAttributes } from '../models/Answer';
-import formResponseUtil = require('../utils/formResponseUtils');
 import createHttpError from 'http-errors';
+import { QueryTypes } from 'sequelize';
+import formResponseUtil = require('../utils/formResponseUtils');
 
 const sequelize = require('../config/db');
 const DEFAULT_PAGE_SIZE = 10;
@@ -81,14 +82,28 @@ export = {
 
       const startIndex = (pageIndex - 1) * size;
 
-      const result = await FormResponse.findAll({
-        order: [
-          ['createdAt', 'DESC'],
-          ['response_id', 'ASC'],
-        ],
-        limit: size,
-        offset: startIndex,
-      });
+      const result = await sequelize.query(
+        `
+      SELECT
+        r.response_id responseId,
+        COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "name",
+        u.email email,
+        r.created_at createdAt,
+        r.updated_at updatedAt
+      FROM
+        responses r
+      LEFT JOIN users u ON
+        r.user_id = u.user_id
+      ORDER BY
+        r.created_at DESC, 
+        r.response_id ASC
+      LIMIT :limit OFFSET :offset
+      `,
+        {
+          replacements: { limit: size, offset: startIndex },
+          type: QueryTypes.SELECT,
+        }
+      );
 
       res.send(result);
     } catch (error) {

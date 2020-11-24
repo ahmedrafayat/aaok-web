@@ -5,6 +5,7 @@ require('dotenv').config();
 import { ConnectionError } from 'sequelize';
 import express, { NextFunction, Request, Response } from 'express';
 import morgan from 'morgan';
+import compression from 'compression';
 import createError = require('http-errors');
 import AuthRoute = require('./routes/auth');
 
@@ -14,6 +15,7 @@ const app = express();
 const sequelize = require('./config/db');
 const jwtUtils = require('./utils/jwtUtils');
 
+app.use(compression());
 app.use(morgan('dev'));
 app.use(express.urlencoded());
 app.use(express.json());

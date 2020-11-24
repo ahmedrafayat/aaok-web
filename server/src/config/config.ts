@@ -21,4 +21,4 @@ const baseConfig = {
     dialect: process.env.DB_DIALECT,
   },
 };
-module.exports = baseConfig;
+export = baseConfig;

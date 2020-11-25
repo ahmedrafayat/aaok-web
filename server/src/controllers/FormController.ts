@@ -1,16 +1,31 @@
 import { NextFunction, Request, Response } from 'express';
-import { QueryTypes } from 'sequelize';
 import createHttpError from 'http-errors';
 import { Form } from '../models/Form';
+import { QueryTypes } from 'sequelize';
 
 const sequelize = require('../config/db');
 
+const getFormsWithNameQuery = `
+SELECT 
+    f.title,
+    f.form_id "formId"
+FROM
+    forms f 
+WHERE
+    f.title ILIKE :term
+ORDER BY
+    f.form_id ASC
+LIMIT 10
+`;
+
 export = {
-  getForms: async (req: Request, res: Response, next: NextFunction) => {
+  getFormsByName: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const allForms = await Form.findAll({
-        attributes: ['formId', 'title'],
-        order: [['formId', 'ASC']],
+      const term = req.query.title || '';
+
+      const allForms = await sequelize.query(getFormsWithNameQuery, {
+        replacements: { term: '%' + term + '%' },
+        type: QueryTypes.SELECT,
       });
 
       res.send(allForms);

@@ -34,6 +34,8 @@ FROM
 WHERE 
     u.first_name ILIKE :term
     OR u.last_name ILIKE :term
+    OR u.email ILIKE :term
+LIMIT 25
 `;
 
 export = {

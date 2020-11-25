@@ -12,12 +12,12 @@ SELECT
    FROM
        responses r
    WHERE
-       r.user_id = u.user_id ) submissions,
+       r.user_id = u.user_id ) "submissions",
    u.email,
-   u.is_enabled isEnabled,
-   u.is_registered isRegistered,
-   u.created_at createdAt,
-   u.updated_at updatedAt
+   u.is_enabled "isEnabled",
+   u.is_registered "isRegistered",
+   u.created_at "createdAt",
+   u.updated_at "updatedAt"
 FROM
    public.users u
 WHERE

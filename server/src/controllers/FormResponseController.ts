@@ -71,11 +71,7 @@ export = {
       );
     }
   },
-  getResponseWithPagination: async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  getResponses: async (req: Request, res: Response, next: NextFunction) => {
     try {
       // const size = Number(req.query.size) || DEFAULT_PAGE_SIZE;
       // const pageIndex = Number(req.query.page) || 1;
@@ -85,7 +81,7 @@ export = {
       const result = await sequelize.query(
         `
       SELECT
-        r.response_id responseId,
+        r.response_id "responseId",
         f.title title,
         COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "name",
         u.email email,

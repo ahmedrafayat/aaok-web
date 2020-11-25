@@ -45,7 +45,7 @@ app.use(
 );
 
 app.use(
-  `${apiBaseUrl}/response`,
+  `${apiBaseUrl}/responses`,
   jwtUtils.verifyAccessToken,
   require('./routes/response')
 );

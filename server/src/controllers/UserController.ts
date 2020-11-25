@@ -24,11 +24,37 @@ WHERE
    u.is_management <> 1
 `;
 
+const userSearchQuery = `
+SELECT 
+    user_id "userId",
+    first_name || ' ' || last_name "name",
+    email
+FROM 
+    users u 
+WHERE 
+    u.first_name ILIKE :term
+    OR u.last_name ILIKE :term
+`;
+
 export = {
   getUsers: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const users = await sequelize.query(userListQuery, {
         type: QueryTypes.SELECT,
+      });
+
+      res.send(users);
+    } catch (error) {
+      next(error);
+    }
+  },
+  getUserByNAme: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const term = req.query.name || '';
+
+      const users = await sequelize.query(userSearchQuery, {
+        type: QueryTypes.SELECT,
+        replacements: { term: '%' + term + '%' },
       });
 
       res.send(users);

@@ -89,8 +89,7 @@ export = {
         f.title title,
         COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "name",
         u.email email,
-        r.created_at "createdAt",
-        r.updated_at "updatedAt"
+        r.created_at "createdAt"
       FROM
         responses r
       INNER JOIN forms f ON

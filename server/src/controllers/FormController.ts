@@ -6,6 +6,18 @@ import { Form } from '../models/Form';
 const sequelize = require('../config/db');
 
 export = {
+  getForms: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const allForms = await Form.findAll({
+        attributes: ['formId', 'title'],
+        order: [['formId', 'ASC']],
+      });
+
+      res.send(allForms);
+    } catch (error) {
+      next(error);
+    }
+  },
   getFormsWithFields: async (
     req: Request,
     res: Response,

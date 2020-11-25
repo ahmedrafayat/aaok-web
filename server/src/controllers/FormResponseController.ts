@@ -8,7 +8,7 @@ import { QueryTypes } from 'sequelize';
 import formResponseUtil = require('../utils/formResponseUtils');
 
 const sequelize = require('../config/db');
-const DEFAULT_PAGE_SIZE = 10;
+// const DEFAULT_PAGE_SIZE = 10;
 
 export = {
   submitForm: async (
@@ -77,10 +77,10 @@ export = {
     next: NextFunction
   ) => {
     try {
-      const size = Number(req.query.size) || DEFAULT_PAGE_SIZE;
-      const pageIndex = Number(req.query.page) || 1;
+      // const size = Number(req.query.size) || DEFAULT_PAGE_SIZE;
+      // const pageIndex = Number(req.query.page) || 1;
 
-      const startIndex = (pageIndex - 1) * size;
+      // const startIndex = (pageIndex - 1) * size;
 
       const result = await sequelize.query(
         `
@@ -100,10 +100,8 @@ export = {
       ORDER BY
         r.created_at DESC, 
         r.response_id ASC
-      LIMIT :limit OFFSET :offset
       `,
         {
-          replacements: { limit: size, offset: startIndex },
           type: QueryTypes.SELECT,
         }
       );

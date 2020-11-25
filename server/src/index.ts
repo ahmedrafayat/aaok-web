@@ -51,6 +51,12 @@ app.use(
 );
 
 app.use(
+  `${apiBaseUrl}/users`,
+  jwtUtils.verifyAccessToken,
+  require('./routes/users')
+);
+
+app.use(
   `${apiBaseUrl}/upload`,
   jwtUtils.verifyAccessToken,
   require('./routes/upload')

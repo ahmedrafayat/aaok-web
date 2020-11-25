@@ -86,12 +86,15 @@ export = {
         `
       SELECT
         r.response_id responseId,
+        f.title title,
         COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "name",
         u.email email,
-        r.created_at createdAt,
-        r.updated_at updatedAt
+        r.created_at "createdAt",
+        r.updated_at "updatedAt"
       FROM
         responses r
+      INNER JOIN forms f ON
+        r.form_id = f.form_id 
       LEFT JOIN users u ON
         r.user_id = u.user_id
       ORDER BY

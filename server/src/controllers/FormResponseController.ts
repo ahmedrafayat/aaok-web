@@ -1,14 +1,28 @@
 import { NextFunction, Request, Response } from 'express';
 import { Field } from '../models/Field';
 import { FormResponse } from '../models/FormResponse';
-import { Transaction } from 'sequelize';
+import { Transaction, QueryTypes } from 'sequelize';
 import { Answer, AnswerCreationAttributes } from '../models/Answer';
 import createHttpError from 'http-errors';
-import { QueryTypes } from 'sequelize';
 import formResponseUtil = require('../utils/formResponseUtils');
 
 const sequelize = require('../config/db');
 // const DEFAULT_PAGE_SIZE = 10;
+
+const fetchResponseAnswersQuery = `
+SELECT
+    f."label" "label",
+    a.value,
+    f.json_config "jsonConfig"
+FROM
+    responses r,
+    answers a,
+    fields f
+WHERE
+    r.response_id = :responseId
+    AND r.response_id = a.response_id
+    AND f.field_id = a.field_id
+`;
 
 export = {
   submitForm: async (
@@ -103,6 +117,20 @@ export = {
           type: QueryTypes.SELECT,
         }
       );
+
+      res.send(result);
+    } catch (error) {
+      next(error);
+    }
+  },
+  getResponse: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const responseId = req.params.responseId;
+
+      const result = await sequelize.query(fetchResponseAnswersQuery, {
+        replacements: { responseId: responseId },
+        type: QueryTypes.SELECT,
+      });
 
       res.send(result);
     } catch (error) {

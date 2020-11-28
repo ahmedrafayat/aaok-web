@@ -24,6 +24,27 @@ WHERE
     AND f.field_id = a.field_id
 `;
 
+const fetchResponseFormQuery = `
+SELECT
+    f.title,
+    f.description,
+    CASE
+        WHEN r.user_id IS NULL THEN 'Anonymous User'
+        ELSE (
+        SELECT
+            u.first_name || ' ' || u.last_name
+        FROM
+            users u WHERE u.user_id = r.user_id
+        )
+    END "submitter"
+FROM
+    responses r,
+    forms f
+WHERE
+    r.response_id = :responseId
+    AND r.form_id = f.form_id
+`;
+
 export = {
   submitForm: async (
     req: Request,
@@ -127,12 +148,20 @@ export = {
     try {
       const responseId = req.params.responseId;
 
-      const result = await sequelize.query(fetchResponseAnswersQuery, {
+      const answers = await sequelize.query(fetchResponseAnswersQuery, {
         replacements: { responseId: responseId },
         type: QueryTypes.SELECT,
       });
 
-      res.send(result);
+      const formData = await sequelize.query(fetchResponseFormQuery, {
+        replacements: { responseId: responseId },
+        type: QueryTypes.SELECT,
+      });
+
+      res.send({
+        ...formData[0],
+        answers: answers,
+      });
     } catch (error) {
       next(error);
     }

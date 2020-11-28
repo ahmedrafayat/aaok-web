@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
+import createHttpError from 'http-errors';
 import { QueryTypes } from 'sequelize';
+import { User } from '../models/User';
 
 const sequelize = require('../config/db');
 
@@ -51,7 +53,7 @@ export = {
       next(error);
     }
   },
-  getUserByNAme: async (req: Request, res: Response, next: NextFunction) => {
+  getUserByName: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const term = req.query.name || '';
 
@@ -61,6 +63,29 @@ export = {
       });
 
       res.send(users);
+    } catch (error) {
+      next(error);
+    }
+  },
+  changeStatus: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.params.userId;
+      const newStatus = req.body.status;
+
+      const user = await User.findByPk(Number(userId));
+
+      if (newStatus === undefined) {
+        throw new createHttpError.BadRequest();
+      }
+
+      if (user) {
+        user.isEnabled = newStatus;
+        await user.save();
+      } else {
+        throw new createHttpError.BadRequest('User does not exist');
+      }
+
+      res.send('success');
     } catch (error) {
       next(error);
     }

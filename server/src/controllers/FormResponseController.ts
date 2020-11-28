@@ -73,10 +73,12 @@ export = {
   },
   getResponses: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // const size = Number(req.query.size) || DEFAULT_PAGE_SIZE;
-      // const pageIndex = Number(req.query.page) || 1;
+      const { form, user, startDate, endDate } = req.query;
 
-      // const startIndex = (pageIndex - 1) * size;
+      const filterQuery = buildFilterQuery(form as string, user as string, {
+        startDate: startDate as string,
+        endDate: endDate as string,
+      });
 
       const result = await sequelize.query(
         `
@@ -92,6 +94,7 @@ export = {
         r.form_id = f.form_id 
       LEFT JOIN users u ON
         r.user_id = u.user_id
+      ${filterQuery}
       ORDER BY
         r.created_at DESC, 
         r.response_id ASC
@@ -106,4 +109,29 @@ export = {
       next(error);
     }
   },
+};
+
+const buildFilterQuery = (
+  forms: string,
+  users: string,
+  dateRange: { startDate: string; endDate: string }
+) => {
+  const filters = [];
+  if (forms && forms.length > 0) {
+    filters.push(`r.form_id IN (${forms})`);
+  }
+  if (users && users.length > 0) {
+    filters.push(`r.user_id IN (${users})`);
+  }
+  if (dateRange.startDate && dateRange.endDate) {
+    filters.push(
+      `r.created_at::date >= '${dateRange.startDate}' AND r.created_at::date <= '${dateRange.endDate}'`
+    );
+  }
+
+  if (filters.length > 0) {
+    return 'WHERE ' + filters.join(' AND ');
+  } else {
+    return '';
+  }
 };

@@ -5,6 +5,7 @@ const sequelize = require('../config/db');
 
 const userListQuery = `
 SELECT
+   u.user_id "userId",
    u.first_name || ' ' || u.last_name AS "name",
    (
    SELECT

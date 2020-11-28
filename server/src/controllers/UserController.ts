@@ -25,6 +25,9 @@ FROM
    public.users u
 WHERE
    u.is_management <> 1
+ORDER BY
+    u.created_at DESC, 
+    u.user_id ASC
 `;
 
 const userSearchQuery = `
@@ -79,8 +82,11 @@ export = {
       }
 
       if (user) {
-        user.isEnabled = newStatus;
-        await user.save();
+        // user.isEnabled = newStatus;
+        await User.update(
+          { isEnabled: Number(newStatus) },
+          { where: { userId: userId } }
+        );
       } else {
         throw new createHttpError.BadRequest('User does not exist');
       }

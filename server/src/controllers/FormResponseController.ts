@@ -28,21 +28,14 @@ const fetchResponseFormQuery = `
 SELECT
     f.title,
     f.description,
-    CASE
-        WHEN r.user_id IS NULL THEN 'Anonymous User'
-        ELSE (
-        SELECT
-            u.first_name || ' ' || u.last_name
-        FROM
-            users u WHERE u.user_id = r.user_id
-        )
-    END "submitter"
+    u.email,
+    COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "submitter"
 FROM
-    responses r,
-    forms f
-WHERE
-    r.response_id = :responseId
-    AND r.form_id = f.form_id
+    responses r
+INNER JOIN forms f ON
+    f.form_id = r.form_id
+LEFT JOIN users u ON
+    u.user_id = r.user_id
 `;
 
 export = {

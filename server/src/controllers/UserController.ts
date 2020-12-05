@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import createHttpError from 'http-errors';
 import { QueryTypes } from 'sequelize';
-import { User } from '../models/User';
 
-const sequelize = require('../config/db');
+import { User } from '../models/User';
+import { sequelize } from '../config/sequelize';
 
 const userListQuery = `
 SELECT
@@ -83,10 +83,7 @@ export = {
 
       if (user) {
         // user.isEnabled = newStatus;
-        await User.update(
-          { isEnabled: Number(newStatus) },
-          { where: { userId: userId } }
-        );
+        await User.update({ isEnabled: Number(newStatus) }, { where: { userId: userId } });
       } else {
         throw new createHttpError.BadRequest('User does not exist');
       }

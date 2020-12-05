@@ -1,6 +1,6 @@
 import { DataTypes, Model, Optional, Sequelize } from 'sequelize';
 
-const sequelize: Sequelize = require('../config/db');
+import { sequelize } from '../config/sequelize';
 
 interface FormAttributes {
   formId: number;
@@ -11,14 +11,9 @@ interface FormAttributes {
   updatedAt: string;
 }
 
-type FormCreationAttributes = Optional<
-  FormAttributes,
-  'formId' | 'createdAt' | 'updatedAt'
->;
+type FormCreationAttributes = Optional<FormAttributes, 'formId' | 'createdAt' | 'updatedAt'>;
 
-export class Form
-  extends Model<FormAttributes, FormCreationAttributes>
-  implements FormAttributes {
+export class Form extends Model<FormAttributes, FormCreationAttributes> implements FormAttributes {
   public formId!: number;
   public title!: string;
   public description!: string;

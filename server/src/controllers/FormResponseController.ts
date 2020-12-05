@@ -6,8 +6,7 @@ import { Answer, AnswerCreationAttributes } from '../models/Answer';
 import createHttpError from 'http-errors';
 import formResponseUtil = require('../utils/formResponseUtils');
 
-const sequelize = require('../config/db');
-// const DEFAULT_PAGE_SIZE = 10;
+import { sequelize } from '../config/sequelize';
 
 const fetchResponseAnswersQuery = `
 SELECT
@@ -39,11 +38,7 @@ LEFT JOIN users u ON
 `;
 
 export = {
-  submitForm: async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
+  submitForm: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const formId = Number(req.params.formId);
     const responseAnswers = req.body;
     // @ts-ignore
@@ -70,9 +65,7 @@ export = {
         const answersToBeSaved: AnswerCreationAttributes[] = [];
 
         for (const [fieldKey, fieldValue] of Object.entries(responseAnswers)) {
-          const field = formFields.find(
-            (field) => fieldKey === String(field.fieldId)
-          );
+          const field = formFields.find((field) => fieldKey === String(field.fieldId));
           if (field) {
             const value = formResponseUtil.generateValueType(field, fieldValue);
             const answer = {

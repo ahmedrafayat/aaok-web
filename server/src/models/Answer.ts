@@ -1,18 +1,14 @@
 import { DataTypes, Model, Optional } from 'sequelize';
-import { FieldType } from '../enums/FieldType';
 
-const sequelize = require('../config/db');
+import { FieldType } from '../enums/FieldType';
+import { sequelize } from '../config/sequelize';
 
 interface ValueType {
   type: FieldType;
 }
 
 export class LocationValue implements ValueType {
-  constructor(
-    public latitude: number,
-    public longitude: number,
-    public type: FieldType
-  ) {}
+  constructor(public latitude: number, public longitude: number, public type: FieldType) {}
 }
 
 export class GenericValue implements ValueType {

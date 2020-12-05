@@ -1,6 +1,6 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 
-const sequelize = require('../config/db');
+import { sequelize } from '../config/sequelize';
 
 interface FormResponseAttributes {
   responseId: number;

@@ -25,4 +25,4 @@ client.on('SIGINT', () => {
   client.quit();
 });
 
-export = client;
+export const redisClient = client;

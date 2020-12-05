@@ -9,4 +9,4 @@ router.get('/', FormResponseController.getResponses);
 
 router.get('/:responseId', FormResponseController.getResponse);
 
-module.exports = router;
+export const FormResponseRouter = router;

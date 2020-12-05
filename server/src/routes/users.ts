@@ -9,4 +9,4 @@ router.get('/name', UserController.getUserByName);
 
 router.put('/change-status/:userId', UserController.changeStatus);
 
-export = router;
+export const UserRouter = router;

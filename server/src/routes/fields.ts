@@ -24,4 +24,4 @@ router.get('/form/:formId', (req, res) => {
     });
 });
 
-module.exports = router;
+export const FieldRouter = router;

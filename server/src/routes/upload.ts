@@ -1,16 +1,13 @@
-import Router = require('express');
-import multer = require('multer');
-import path = require('path');
+import { Router } from 'express';
+import multer from 'multer';
+import path from 'path';
 
 const router = Router();
 
 const storage = multer.diskStorage({
   destination: './public/uploads',
   filename(req, file, callback) {
-    callback(
-      null,
-      file.fieldname + '-' + Date.now() + path.extname(file.originalname)
-    );
+    callback(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
   },
 });
 
@@ -19,9 +16,7 @@ const upload = multer({
   limits: { fileSize: 2000000 },
   fileFilter(req, file, callback) {
     const filetypes = /jpeg|jpg|png|gif/;
-    const extname = filetypes.test(
-      path.extname(file.originalname).toLowerCase()
-    );
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = filetypes.test(file.mimetype);
 
     if (mimetype && extname) {
@@ -58,4 +53,4 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-export = router;
+export const FileUploadRouter = router;

@@ -9,4 +9,4 @@ router.post('/admin/login', AuthController.adminLogin);
 router.post('/refresh-token', AuthController.refreshToken);
 router.delete('/logout', AuthController.logout);
 
-export = router;
+export const AuthRouter = router;

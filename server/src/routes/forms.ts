@@ -11,4 +11,4 @@ router.get('/name', FormController.getFormsByName);
 // Create a new form
 router.post('/', FormController.createNewForm);
 
-module.exports = router;
+export const FormRouter = router;

@@ -1,20 +1,25 @@
-import { HttpException } from './models/HttpException';
-
 require('dotenv').config();
 
+import { HttpException } from './models/HttpException';
 import { ConnectionError } from 'sequelize';
 import express, { NextFunction, Request, Response } from 'express';
 import morgan from 'morgan';
 import compression from 'compression';
-import createError = require('http-errors');
-import AuthRoute = require('./routes/auth');
+import createError from 'http-errors';
 import cors from 'cors';
+
+import { AuthRouter } from './routes/auth';
+import { FormRouter } from './routes/forms';
+import { FormResponseRouter } from './routes/response';
+import { JwtUtils } from './utils/jwtUtils';
+import { UserRouter } from './routes/users';
+import { FieldRouter } from './routes/fields';
+import { FileUploadRouter } from './routes/upload';
+import { sequelize } from './config/sequelize';
 
 const port = process.env.PORT || 5000;
 const apiBaseUrl = process.env.API_BASE_URL;
 const app = express();
-const sequelize = require('./config/db');
-const jwtUtils = require('./utils/jwtUtils');
 
 app.use(compression());
 app.use(morgan('dev'));
@@ -32,44 +37,30 @@ sequelize
     console.log('Unable to connect to the database: ', err);
   });
 
-app.use(`${apiBaseUrl}/auth`, AuthRoute);
-app.use(
-  `${apiBaseUrl}/forms`,
-  jwtUtils.verifyAccessToken,
-  require('./routes/forms')
-);
-app.use(
-  `${apiBaseUrl}/fields`,
-  jwtUtils.verifyAccessToken,
-  require('./routes/fields')
-);
+/*
+ * APP ROUTES
+ */
+app.use(`${apiBaseUrl}/auth`, AuthRouter);
+app.use(`${apiBaseUrl}/forms`, JwtUtils.verifyAccessToken, FormRouter);
+app.use(`${apiBaseUrl}/fields`, JwtUtils.verifyAccessToken, FieldRouter);
+app.use(`${apiBaseUrl}/responses`, JwtUtils.verifyAccessToken, FormResponseRouter);
+app.use(`${apiBaseUrl}/users`, JwtUtils.verifyAccessToken, UserRouter);
+app.use(`${apiBaseUrl}/upload`, JwtUtils.verifyAccessToken, FileUploadRouter);
 
-app.use(
-  `${apiBaseUrl}/responses`,
-  jwtUtils.verifyAccessToken,
-  require('./routes/response')
-);
-
-app.use(
-  `${apiBaseUrl}/users`,
-  jwtUtils.verifyAccessToken,
-  require('./routes/users')
-);
-
-app.use(
-  `${apiBaseUrl}/upload`,
-  jwtUtils.verifyAccessToken,
-  require('./routes/upload')
-);
-
+/*
+ * NOT FOUND ROUTE
+ */
 app.use(async (req, res, next) => {
   next(new createError.NotFound('Route Not Found'));
 });
 
+/*
+ * DEFAULT ERROR HANDLER
+ */
 app.use(
-  //@ts-ignore
+  // @ts-ignore
   (err: HttpException, req: Request, res: Response, _next: NextFunction) => {
-    console.log('error occurred');
+    console.error('Unhandled Error occurred');
     res.send({
       error: {
         status: err.status || 500,

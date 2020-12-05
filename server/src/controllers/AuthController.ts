@@ -1,18 +1,13 @@
 import createError from 'http-errors';
-import { User } from '../models/User';
 import { Op, UniqueConstraintError } from 'sequelize';
 import { NextFunction, Request, Response } from 'express';
 
-import client = require('../utils/initRedis');
-
-const jwtUtil = require('../utils/jwtUtils');
+import { User } from '../models/User';
+import { JwtUtils } from '../utils/jwtUtils';
+import { redisClient } from '../utils/initRedis';
 
 export = {
-  register: async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
+  register: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     console.log(req.body);
     try {
       const { email, password, firstName, lastName } = req.body;
@@ -20,9 +15,7 @@ export = {
         throw new createError.BadRequest('Please enter all fields');
 
       if (typeof password !== 'string' && password.length < 8)
-        throw new createError.BadRequest(
-          'Password must be have at least 8 characters'
-        );
+        throw new createError.BadRequest('Password must be have at least 8 characters');
 
       // fetch user by email
       const userExists = await User.findOne({
@@ -62,15 +55,12 @@ export = {
           firstName: savedUser.firstName,
           lastName: savedUser.lastName,
         };
-        const accessToken = await jwtUtil.signAccessToken(tokenPayload);
-        const refreshToken = await jwtUtil.signRefreshToken(tokenPayload);
+        const accessToken = await JwtUtils.signAccessToken(tokenPayload);
+        const refreshToken = await JwtUtils.signRefreshToken(tokenPayload);
         if (accessToken !== null && refreshToken !== null) {
           res.send({ accessToken, refreshToken });
         }
-      } else if (
-        userExists !== null &&
-        (userExists.isRegistered || userExists.password)
-      ) {
+      } else if (userExists !== null && (userExists.isRegistered || userExists.password)) {
         throw new createError.Conflict('A user with this email already exists');
       }
       // when not exists, register and make disabled
@@ -99,16 +89,11 @@ export = {
     }
   },
 
-  login: async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
+  login: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { email, password } = req.body;
 
-      if (!email || !password)
-        throw new createError.BadRequest('Invalid Username/Password');
+      if (!email || !password) throw new createError.BadRequest('Invalid Username/Password');
 
       const user = await User.findOne({
         where: {
@@ -123,14 +108,11 @@ export = {
       }
 
       if (!user.isEnabled) {
-        throw new createError.Unauthorized(
-          'User is not enabled. Please contact an administrator'
-        );
+        throw new createError.Unauthorized('User is not enabled. Please contact an administrator');
       }
 
-      const isMatch = await jwtUtil.isValidPassword(password, user.password);
-      if (!isMatch)
-        throw new createError.Unauthorized('Invalid username/password');
+      const isMatch = await JwtUtils.isValidPassword(password, user.password);
+      if (!isMatch) throw new createError.Unauthorized('Invalid username/password');
 
       const tokenPayload = {
         firstName: user.firstName,
@@ -138,8 +120,8 @@ export = {
         id: user.userId,
         isManagement: user.isManagement,
       };
-      const accessToken = await jwtUtil.signAccessToken(tokenPayload);
-      const refreshToken = await jwtUtil.signRefreshToken(tokenPayload);
+      const accessToken = await JwtUtils.signAccessToken(tokenPayload);
+      const refreshToken = await JwtUtils.signRefreshToken(tokenPayload);
       if (accessToken && refreshToken) {
         res.send({ accessToken, refreshToken });
       } else throw new createError.InternalServerError();
@@ -148,18 +130,14 @@ export = {
     }
   },
 
-  refreshToken: async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
+  refreshToken: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { refreshToken } = req.body;
       if (!refreshToken) throw new createError.BadRequest();
-      const tokenPayload = await jwtUtil.verifyRefreshToken(refreshToken);
+      const tokenPayload = await JwtUtils.verifyRefreshToken(refreshToken);
 
-      const accessToken = await jwtUtil.signAccessToken(tokenPayload);
-      const refToken = await jwtUtil.signRefreshToken(tokenPayload);
+      const accessToken = await JwtUtils.signAccessToken(tokenPayload);
+      const refToken = await JwtUtils.signRefreshToken(tokenPayload);
 
       if (accessToken && refToken) {
         res.send({ accessToken, refreshToken: refToken });
@@ -169,17 +147,13 @@ export = {
     }
   },
 
-  logout: async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
+  logout: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { refreshToken } = req.body;
       if (!refreshToken) throw new createError.BadRequest();
-      const userData = await jwtUtil.verifyRefreshToken(refreshToken);
+      const userData = await JwtUtils.verifyRefreshToken(refreshToken);
 
-      client.DEL(String(userData.id), (err, reply) => {
+      redisClient.DEL(String(userData.id), (err, reply) => {
         if (err) {
           console.log(err.message);
           throw new createError.InternalServerError();
@@ -196,8 +170,7 @@ export = {
     try {
       const { email, password } = req.body;
 
-      if (!email || !password)
-        throw new createError.BadRequest('Invalid Username/Password');
+      if (!email || !password) throw new createError.BadRequest('Invalid Username/Password');
 
       const user = await User.findOne({
         where: {
@@ -212,14 +185,11 @@ export = {
       }
 
       if (!user.isEnabled || !user.isManagement) {
-        throw new createError.Unauthorized(
-          'You are not allowed to access this site'
-        );
+        throw new createError.Unauthorized('You are not allowed to access this site');
       }
 
       const isMatch = await isValidPassword(password, user.password);
-      if (!isMatch)
-        throw new createError.Unauthorized('Invalid username/password');
+      if (!isMatch) throw new createError.Unauthorized('Invalid username/password');
 
       const tokenPayload = {
         firstName: user.firstName,
@@ -227,8 +197,8 @@ export = {
         id: user.userId,
         isManagement: user.isManagement,
       };
-      const accessToken = await jwtUtil.signAccessToken(tokenPayload);
-      const refreshToken = await jwtUtil.signRefreshToken(tokenPayload);
+      const accessToken = await JwtUtils.signAccessToken(tokenPayload);
+      const refreshToken = await JwtUtils.signRefreshToken(tokenPayload);
       if (accessToken && refreshToken) {
         res.send({ accessToken, refreshToken });
       } else throw new createError.InternalServerError();
@@ -238,9 +208,6 @@ export = {
   },
 };
 
-async function isValidPassword(
-  enteredPassword: string,
-  actualPassword: string
-) {
-  return await jwtUtil.isValidPassword(enteredPassword, actualPassword);
+async function isValidPassword(enteredPassword: string, actualPassword: string) {
+  return await JwtUtils.isValidPassword(enteredPassword, actualPassword);
 }

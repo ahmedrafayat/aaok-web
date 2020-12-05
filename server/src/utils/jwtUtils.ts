@@ -1,10 +1,10 @@
 import { SignOptions } from 'jsonwebtoken';
 import { compare } from 'bcrypt';
 import createError from 'http-errors';
-import JWT = require('jsonwebtoken');
-
-import client = require('./initRedis');
+import JWT from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
+
+import { redisClient } from './initRedis';
 
 const YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
 const ACCESS_TOKEN_EXPIRY = '30m';
@@ -17,7 +17,7 @@ export type UserData = {
   id: number;
 };
 
-module.exports = {
+export const JwtUtils = {
   signAccessToken: async (userData: UserData) => {
     return new Promise((resolve, reject) => {
       const payload = userData;
@@ -55,20 +55,14 @@ module.exports = {
             return;
           } else {
             if (token)
-              client.SET(
-                String(userData.id),
-                token,
-                'EX',
-                YEAR_IN_SECONDS,
-                (err) => {
-                  if (err) {
-                    console.log(err.message);
-                    reject(new createError.InternalServerError());
-                    return;
-                  }
-                  return resolve(token);
+              redisClient.SET(String(userData.id), token, 'EX', YEAR_IN_SECONDS, (err) => {
+                if (err) {
+                  console.log(err.message);
+                  reject(new createError.InternalServerError());
+                  return;
                 }
-              );
+                return resolve(token);
+              });
             else return;
           }
         });
@@ -78,8 +72,7 @@ module.exports = {
     });
   },
   verifyAccessToken: (req: Request, res: Response, next: NextFunction) => {
-    if (!req.headers['authorization'])
-      return next(new createError.Unauthorized());
+    if (!req.headers['authorization']) return next(new createError.Unauthorized());
 
     const authHeader = req.headers['authorization'];
     const bearerToken = authHeader.split(' ');
@@ -89,8 +82,7 @@ module.exports = {
     if (secret) {
       JWT.verify(token, secret, (err, payload) => {
         if (err) {
-          const message =
-            err.name === 'JsonWebTokenError' ? 'Unauthorized' : err.message;
+          const message = err.name === 'JsonWebTokenError' ? 'Unauthorized' : err.message;
           return next(new createError.Unauthorized(message));
         }
         // @ts-ignore
@@ -113,7 +105,7 @@ module.exports = {
             'id' in payload
           ) {
             const userId = payload.id;
-            client.GET(userId, (err, result) => {
+            redisClient.GET(userId, (err, result) => {
               if (err) {
                 console.log(err.message);
                 reject(new createError.InternalServerError());
@@ -129,10 +121,7 @@ module.exports = {
                 });
               else reject(createError.Unauthorized);
             });
-          } else
-            throw new createError.Unauthorized(
-              'Invalid token, please login again'
-            );
+          } else throw new createError.Unauthorized('Invalid token, please login again');
         });
       } else {
         console.log('Refresh Token not found');

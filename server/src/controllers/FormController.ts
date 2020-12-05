@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import createHttpError from 'http-errors';
-import { Form } from '../models/Form';
 import { QueryTypes } from 'sequelize';
 
-const sequelize = require('../config/db');
+import { Form } from '../models/Form';
+import { sequelize } from '../config/sequelize';
 
 const getFormsWithNameQuery = `
 SELECT 
@@ -33,11 +33,7 @@ export = {
       next(error);
     }
   },
-  getFormsWithFields: async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  getFormsWithFields: async (req: Request, res: Response, next: NextFunction) => {
     try {
       // @ts-ignore
       const decodedToken = req.payload;
@@ -72,11 +68,7 @@ export = {
       );
       res.send(formsFields);
     } catch (error) {
-      next(
-        new createHttpError.InternalServerError(
-          'A problem occurred while fetching forms'
-        )
-      );
+      next(new createHttpError.InternalServerError('A problem occurred while fetching forms'));
     }
   },
   createNewForm: async (req: Request, res: Response, next: NextFunction) => {

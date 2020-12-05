@@ -1,7 +1,7 @@
 import { genSalt, hash } from 'bcrypt';
 import { DataTypes, Model, Optional } from 'sequelize';
 
-const sequelize = require('../config/db');
+import { sequelize } from '../config/sequelize';
 
 const SALT_ROUNDS = 10;
 
@@ -30,9 +30,7 @@ type UserCreationAttributes = Optional<
   | 'isRegistered'
 >;
 
-export class User
-  extends Model<UserAttributes, UserCreationAttributes>
-  implements UserAttributes {
+export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
   public userId!: number;
   public firstName!: string;
   public lastName!: string;

@@ -60,7 +60,10 @@ app.use(async (req, res, next) => {
 app.use(
   // @ts-ignore
   (err: HttpException, req: Request, res: Response, _next: NextFunction) => {
-    console.error('Unhandled Error occurred');
+    console.log('Unhandled Error occurred', err.status);
+    if (err.status) {
+      res.status(err.status);
+    }
     res.send({
       error: {
         status: err.status || 500,

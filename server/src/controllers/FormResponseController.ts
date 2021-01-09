@@ -35,6 +35,8 @@ INNER JOIN forms f ON
     f.form_id = r.form_id
 LEFT JOIN users u ON
     u.user_id = r.user_id
+WHERE
+    r.response_id = :responseId
 `;
 
 export = {

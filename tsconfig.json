@@ -1,13 +1,15 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "module": "CommonJS",
+    "target": "es5",
+    "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "build",
     "sourceMap": true,
+    "baseUrl": "/",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "removeComments": true,
     "forceConsistentCasingInFileNames": true
   }
 }

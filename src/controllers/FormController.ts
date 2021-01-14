@@ -18,7 +18,7 @@ ORDER BY
 LIMIT 10
 `;
 
-export = {
+export const FormController = {
   getFormsByName: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const term = req.query.title || '';

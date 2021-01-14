@@ -6,7 +6,7 @@ import { User } from '../models/User';
 import { JwtUtils } from '../utils/jwtUtils';
 import { redisClient } from '../utils/initRedis';
 
-export = {
+export const AuthController = {
   register: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     console.log(req.body);
     try {
@@ -14,7 +14,7 @@ export = {
       if (!email || !password || !firstName || !lastName)
         throw new createError.BadRequest('Please enter all fields');
 
-      if (typeof password !== 'string' && password.length < 8)
+      if (typeof password !== 'string' || password.length < 8)
         throw new createError.BadRequest('Password must be have at least 8 characters');
 
       // fetch user by email
@@ -35,7 +35,6 @@ export = {
         isManagement: 0,
       });
 
-      // if email exists and is enabled but hasn't registered
       if (
         userExists !== null &&
         (!userExists.isRegistered || !userExists.password) &&
@@ -51,7 +50,6 @@ export = {
         const tokenPayload = {
           isManagement: savedUser.isManagement,
           id: savedUser.userId,
-          // email: savedUser.email,
           firstName: savedUser.firstName,
           lastName: savedUser.lastName,
         };

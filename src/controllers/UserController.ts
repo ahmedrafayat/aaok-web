@@ -44,7 +44,7 @@ WHERE
 LIMIT 25
 `;
 
-export = {
+export const UserController = {
   getUsers: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const users = await sequelize.query(userListQuery, {

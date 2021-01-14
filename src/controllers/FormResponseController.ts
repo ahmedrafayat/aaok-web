@@ -39,7 +39,7 @@ WHERE
     r.response_id = :responseId
 `;
 
-export = {
+export const FormResponseController = {
   submitForm: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const formId = Number(req.params.formId);
     const responseAnswers = req.body;

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import FormResponseController = require('../controllers/FormResponseController');
+import { FormResponseController } from '../controllers/FormResponseController';
 
 const router = Router();
 

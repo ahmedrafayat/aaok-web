@@ -7,7 +7,7 @@ router.get('/', UserController.getUsers);
 
 router.get('/name', UserController.getUserByName);
 
-// router.get('/get-disabled-users', UserController.)
+router.get('/get-disabled-users', UserController.getDisabledUsersAfterLastEnabled);
 
 router.put('/change-status/:userId', UserController.changeStatus);
 

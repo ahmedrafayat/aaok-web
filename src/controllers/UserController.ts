@@ -5,6 +5,14 @@ import { QueryTypes } from 'sequelize';
 import { User } from '../models/User';
 import { sequelize } from '../config/sequelize';
 
+const disabledUsersAfterLastEnabledCountQuery = `
+SELECT 
+	CASE EXISTS(SELECT U.CREATED_AT FROM USERS U WHERE IS_ENABLED = 1)
+		WHEN TRUE THEN (SELECT COUNT (*) FROM USERS U2 WHERE U2.CREATED_AT > (SELECT U3.CREATED_AT FROM USERS U3 WHERE U3.IS_ENABLED = 1 ORDER BY U3.CREATED_AT DESC LIMIT 1))
+		ELSE (SELECT COUNT(*) FROM USERS U4)
+	END
+`;
+
 const userListQuery = `
 SELECT
    u.user_id "userId",
@@ -89,6 +97,17 @@ export const UserController = {
       }
 
       res.send('success');
+    } catch (error) {
+      next(error);
+    }
+  },
+  getDisabledUsersAfterLastEnabled: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const disabledCount = await sequelize.query(disabledUsersAfterLastEnabledCountQuery, {
+        type: QueryTypes.SELECT,
+      });
+
+      res.send(disabledCount);
     } catch (error) {
       next(error);
     }

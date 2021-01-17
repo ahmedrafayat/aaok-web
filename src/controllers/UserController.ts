@@ -83,20 +83,27 @@ export const UserController = {
       const userId = req.params.userId;
       const newStatus = req.body.status;
 
-      const user = await User.findByPk(Number(userId));
+      let user = await User.findByPk(Number(userId));
 
       if (newStatus === undefined) {
         throw new createHttpError.BadRequest();
       }
 
+      let updatedUser = null;
+
       if (user) {
-        // user.isEnabled = newStatus;
-        await User.update({ isEnabled: Number(newStatus) }, { where: { userId: userId } });
+        const updateUsers = await User.update(
+          { isEnabled: Number(newStatus) },
+          { where: { userId: userId } }
+        );
+        if (updateUsers.length > 0) {
+          user.isEnabled = Number(newStatus);
+        }
       } else {
         throw new createHttpError.BadRequest('User does not exist');
       }
 
-      res.send('success');
+      res.send(user);
     } catch (error) {
       next(error);
     }

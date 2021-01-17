@@ -9,6 +9,6 @@ router.get('/name', UserController.getUserByName);
 
 router.get('/get-disabled-users', UserController.getDisabledUsersAfterLastEnabled);
 
-router.put('/change-status/:userId', UserController.changeStatus);
+router.patch('/change-status/:userId', UserController.changeStatus);
 
 export const UserRouter = router;

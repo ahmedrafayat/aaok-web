@@ -10,6 +10,16 @@ const YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
 const ACCESS_TOKEN_EXPIRY = '30m';
 const REFRESH_TOKEN_EXPIRY = '1y';
 
+const access_token_secret =
+  process.env.NODE_ENV === 'production'
+    ? process.env.PROD_ACCESS_TOKEN_SECRET
+    : process.env.DEV_ACCESS_TOKEN_SECRET;
+
+const refresh_token_secret =
+  process.env.NODE_ENV === 'production'
+    ? process.env.PROD_REFRESH_TOKEN_SECRET
+    : process.env.DEV_REFRESH_TOKEN_SECRET;
+
 export type UserData = {
   firstName: string;
   lastName: string;
@@ -21,13 +31,12 @@ export const JwtUtils = {
   signAccessToken: async (userData: UserData) => {
     return new Promise((resolve, reject) => {
       const payload = userData;
-      const secret = process.env.ACCESS_TOKEN_SECRET;
-      if (secret) {
+      if (access_token_secret) {
         const options: SignOptions = {
           expiresIn: ACCESS_TOKEN_EXPIRY,
           issuer: process.env.HOST_URL || 'AAOKay',
         };
-        JWT.sign(payload, secret, options, (err, token) => {
+        JWT.sign(payload, access_token_secret, options, (err, token) => {
           if (err) {
             console.log(err.message);
             reject(new createError.InternalServerError());
@@ -42,13 +51,12 @@ export const JwtUtils = {
   signRefreshToken: async (userData: UserData) => {
     return new Promise((resolve, reject) => {
       const payload = userData;
-      const secret = process.env.REFRESH_TOKEN_SECRET;
-      if (secret) {
+      if (refresh_token_secret) {
         const options: SignOptions = {
           expiresIn: REFRESH_TOKEN_EXPIRY,
           issuer: process.env.HOST_URL || 'AAOKay',
         };
-        JWT.sign(payload, secret, options, (err, token) => {
+        JWT.sign(payload, refresh_token_secret, options, (err, token) => {
           if (err) {
             console.log(err.message);
             reject(new createError.InternalServerError());
@@ -77,10 +85,9 @@ export const JwtUtils = {
     const authHeader = req.headers['authorization'];
     const bearerToken = authHeader.split(' ');
     const token: string = bearerToken[1];
-    const secret = process.env.ACCESS_TOKEN_SECRET;
 
-    if (secret) {
-      JWT.verify(token, secret, (err, payload) => {
+    if (access_token_secret) {
+      JWT.verify(token, access_token_secret, (err, payload) => {
         if (err) {
           const message = err.name === 'JsonWebTokenError' ? 'Unauthorized' : err.message;
           return next(new createError.Unauthorized(message));
@@ -93,10 +100,9 @@ export const JwtUtils = {
   },
   verifyRefreshToken: (refreshToken: string): Promise<UserData> => {
     return new Promise((resolve, reject) => {
-      const secret = process.env.REFRESH_TOKEN_SECRET;
-      if (secret) {
+      if (refresh_token_secret) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        JWT.verify(refreshToken, secret, (err, payload: any) => {
+        JWT.verify(refreshToken, refresh_token_secret, (err, payload: any) => {
           if (err) return reject(new createError.Unauthorized());
           if (
             'firstName' in payload &&

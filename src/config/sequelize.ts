@@ -1,12 +1,10 @@
 import { Sequelize } from 'sequelize';
 import { baseConfig } from './config';
 
-export const sequelize = new Sequelize(
-  baseConfig.development.database,
-  baseConfig.development.username,
-  baseConfig.development.password,
-  {
-    host: baseConfig.development.host,
-    dialect: 'postgres',
-  }
-);
+const config =
+  process.env.NODE_ENV === 'production' ? baseConfig.production : baseConfig.development;
+
+export const sequelize = new Sequelize(config.database, config.username, config.password, {
+  host: config.host,
+  dialect: 'postgres',
+});

@@ -1,20 +1,14 @@
 export const baseConfig = {
   development: {
-    username: process.env.DB_USER || '',
-    password: process.env.DB_PASS || '',
-    database: process.env.DB_NAME || '',
-    host: process.env.DB_HOST || '',
-  },
-  test: {
-    username: process.env.DB_USER || '',
-    password: process.env.DB_PASS || '',
-    database: process.env.DB_NAME || '',
-    host: process.env.DB_HOST || '',
+    username: process.env.DEV_DB_USER || '',
+    password: process.env.DEV_DB_PASS || '',
+    database: process.env.DEV_DB_NAME || '',
+    host: process.env.DEV_DB_HOST || '',
   },
   production: {
-    username: process.env.DB_USER || '',
-    password: process.env.DB_PASS || '',
-    database: process.env.DB_NAME || '',
-    host: process.env.DB_HOST || '',
+    username: process.env.PROD_DB_USER || '',
+    password: process.env.PROD_DB_PASS || '',
+    database: process.env.PROD_DB_NAME || '',
+    host: process.env.PROD_DB_HOST || '',
   },
 };

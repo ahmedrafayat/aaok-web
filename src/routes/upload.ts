@@ -29,8 +29,10 @@ const upload = multer({
 
 router.post('/', async (req, res, next) => {
   try {
+    console.log('In Upload');
     upload(req, res, (err: any) => {
       if (err) {
+        console.error('FILE UPLOAD', err.message || 'ERROR UPLOADING FILE');
         res.status(400);
         res.send({
           error: {
@@ -39,7 +41,7 @@ router.post('/', async (req, res, next) => {
           },
         });
       } else {
-        console.log(req.file);
+        // console.log(req.file);
         res.status(200);
         res.send({
           filename: req.file.filename,

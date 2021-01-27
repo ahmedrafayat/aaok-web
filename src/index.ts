@@ -20,6 +20,7 @@ import { sequelize } from './config/sequelize';
 const port = process.env.PORT || 5000;
 const apiBaseUrl = process.env.API_BASE_URL;
 const app = express();
+const env = process.env.NODE_ENV;
 
 app.use(compression());
 app.use(morgan('dev'));
@@ -29,7 +30,7 @@ app.use(express.json());
 app.use(express.static('./public'));
 
 sequelize
-  .authenticate({ logging: console.log })
+  .authenticate({ logging: env === 'production' ? false : console.log })
   .then(() => {
     console.log('Connection has been established successfully');
   })

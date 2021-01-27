@@ -30,7 +30,7 @@ app.use(express.json());
 app.use(express.static('./public'));
 
 sequelize
-  .authenticate({ logging: env === 'production' ? false : console.log })
+  .authenticate()
   .then(() => {
     console.log('Connection has been established successfully');
   })

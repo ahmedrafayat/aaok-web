@@ -122,8 +122,6 @@ export const sendEnabledEmail = (options: SendEmailOptions): Promise<boolean> =>
                                   <tr class="row__row"> From, <br large="12" /> AAOK Team </tr>
                                 </table>
                               </div>
-                              <div style="overflow: hidden; border-radius: 9999px; margin-top: 30px;"> <img src="cid:aaok@aaok_app_logo" alt="logo" border="0" class="img__block" style="height: auto; max-width: 100%; width: 15%; margin-right: auto; margin-left: auto; display: block;"
-                                /> </div>
                             </td>
                           </tr>
                         </table> <!--[if mso | IE]> </td>
@@ -136,13 +134,6 @@ export const sendEnabledEmail = (options: SendEmailOptions): Promise<boolean> =>
         </body>
       </html>
       `,
-      attachments: [
-        {
-          filename: 'aaok_logo.png',
-          path: process.cwd() + '/src/images/aaok_logo_without_transparency.png',
-          cid: 'aaok@aaok_app_logo',
-        },
-      ],
     };
 
     transporter.sendMail(mailOptions, (err, data) => {

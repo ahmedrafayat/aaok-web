@@ -101,7 +101,7 @@ export const UserController = {
           user.isEnabled = Number(newStatus);
         }
         if (Number(newStatus) === 1) {
-          emailSent = await sendEnabledEmail({
+          sendEnabledEmail({
             name: user.firstName + ' ' + user.lastName,
             toEmail: user.email,
           });
@@ -110,7 +110,7 @@ export const UserController = {
         throw new createHttpError.BadRequest('User does not exist');
       }
 
-      res.send({ emailSent: emailSent });
+      res.send({ isEnabled: user.isEnabled });
     } catch (error) {
       next(error);
     }

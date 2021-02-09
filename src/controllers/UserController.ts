@@ -4,6 +4,7 @@ import { QueryTypes } from 'sequelize';
 
 import { User } from '../models/User';
 import { sequelize } from '../config/sequelize';
+import { sendEnabledEmail } from '../config/nodemailer';
 
 const disabledUsersAfterLastEnabledCountQuery = `
 SELECT 
@@ -89,7 +90,7 @@ export const UserController = {
         throw new createHttpError.BadRequest();
       }
 
-      let updatedUser = null;
+      let emailSent = false;
 
       if (user) {
         const updateUsers = await User.update(
@@ -99,11 +100,17 @@ export const UserController = {
         if (updateUsers.length > 0) {
           user.isEnabled = Number(newStatus);
         }
+        if (Number(newStatus) === 1) {
+          emailSent = await sendEnabledEmail({
+            name: user.firstName + ' ' + user.lastName,
+            toEmail: user.email,
+          });
+        }
       } else {
         throw new createHttpError.BadRequest('User does not exist');
       }
 
-      res.send(user);
+      res.send({ emailSent: emailSent });
     } catch (error) {
       next(error);
     }

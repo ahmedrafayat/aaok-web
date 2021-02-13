@@ -5,7 +5,6 @@ import { NextFunction, Request, Response } from 'express';
 import { User } from '../models/User';
 import { JwtUtils } from '../utils/jwtUtils';
 import { redisClient } from '../utils/initRedis';
-import JWT from 'jsonwebtoken';
 import { sendResetPasswordEmail } from '../config/nodemailer';
 
 export const AuthController = {

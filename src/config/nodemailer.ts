@@ -5,19 +5,19 @@ type SendEmailOptions = {
   name: string;
 };
 
+const transporter = nodemailer.createTransport({
+  service: 'Outlook365',
+  host: 'smtp.office365.com',
+  port: 465,
+  secure: true, // true for 465, false for other ports
+  auth: {
+    user: process.env.NODEMAILER_EMAIL, // generated ethereal user
+    pass: process.env.NODEMAILER_PASS, // generated ethereal password
+  },
+});
+
 export const sendEnabledEmail = (options: SendEmailOptions): Promise<boolean> => {
   return new Promise((resolve, reject) => {
-    const transporter = nodemailer.createTransport({
-      service: 'Outlook365',
-      host: 'smtp.office365.com',
-      port: 587,
-      secure: true, // true for 465, false for other ports
-      auth: {
-        user: process.env.NODEMAILER_EMAIL, // generated ethereal user
-        pass: process.env.NODEMAILER_PASS, // generated ethereal password
-      },
-    });
-
     const mailOptions: SendMailOptions = {
       from: '"AAOK" <admin@associatedasphalt.biz>',
       to: options.toEmail,

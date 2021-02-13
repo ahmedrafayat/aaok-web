@@ -5,6 +5,8 @@ import { NextFunction, Request, Response } from 'express';
 import { User } from '../models/User';
 import { JwtUtils } from '../utils/jwtUtils';
 import { redisClient } from '../utils/initRedis';
+import JWT from 'jsonwebtoken';
+import { sendResetPasswordEmail } from '../config/nodemailer';
 
 export const AuthController = {
   register: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -202,6 +204,28 @@ export const AuthController = {
       } else throw new createError.InternalServerError();
     } catch (error) {
       next(error);
+    }
+  },
+
+  forgotPassword: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const email = req.body.email.trim();
+      const user = await User.findOne({ where: { email: email } });
+      if (user) {
+        const token = await JwtUtils.signPasswordResetToken(user.password, user.userId);
+        if (token) {
+          user.resetToken = token;
+          await user.save();
+          sendResetPasswordEmail({
+            name: `${user.firstName} ${user.lastName}`,
+            resetToken: token,
+            toEmail: user.email,
+          });
+        }
+      }
+      res.send(200);
+    } catch (e) {
+      next(new createError.InternalServerError());
     }
   },
 };

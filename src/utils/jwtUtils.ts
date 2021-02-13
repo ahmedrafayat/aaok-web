@@ -142,4 +142,19 @@ export const JwtUtils = {
       throw error;
     }
   },
+  signPasswordResetToken: async (secret: string, userId: number): Promise<string | undefined> => {
+    return new Promise((resolve, reject) => {
+      const options: SignOptions = {
+        expiresIn: '20m',
+        issuer: process.env.HOST_URL,
+      };
+      JWT.sign({ id: userId }, secret, options, (err, token) => {
+        if (err) {
+          console.log(err.message);
+          reject(new createError.InternalServerError());
+        }
+        resolve(token);
+      });
+    });
+  },
 };

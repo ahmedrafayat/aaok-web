@@ -14,6 +14,7 @@ interface UserAttributes {
   isEnabled: number;
   isRegistered: number;
   isManagement: number;
+  resetToken: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -28,6 +29,7 @@ type UserCreationAttributes = Optional<
   | 'password'
   | 'isEnabled'
   | 'isRegistered'
+  | 'resetToken'
 >;
 
 export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
@@ -39,6 +41,7 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   public isEnabled!: number;
   public isRegistered!: number;
   public isManagement!: number;
+  public resetToken!: string;
 
   public createdAt!: string;
   public updatedAt!: string;
@@ -92,6 +95,11 @@ User.init(
       type: DataTypes.INTEGER,
       field: 'is_management',
       allowNull: false,
+    },
+    resetToken: {
+      type: DataTypes.TEXT,
+      field: 'reset_token',
+      allowNull: true,
     },
     createdAt: {
       type: DataTypes.DATE,

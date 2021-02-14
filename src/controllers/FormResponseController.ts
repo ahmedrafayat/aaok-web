@@ -110,6 +110,8 @@ export const FormResponseController = {
         f.title title,
         COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "name",
         u.email email,
+        COALESCE(u2.first_name || ' ' || u2.last_name, '') "assignedTo",
+	      r.status status,
         r.created_at "createdAt"
       FROM
         responses r
@@ -117,6 +119,8 @@ export const FormResponseController = {
         r.form_id = f.form_id 
       LEFT JOIN users u ON
         r.user_id = u.user_id
+      LEFT JOIN users u2 on 
+        r.assigned_to = u2.user_id 
       ${filterQuery}
       ORDER BY
         r.created_at DESC, 

@@ -6,13 +6,15 @@ interface FormResponseAttributes {
   responseId: number;
   userId: number;
   formId: number;
+  assignedTo: number;
+  status: number;
   createdAt: string;
   updatedAt: string;
 }
 
 type FormResponseCreationAttributes = Optional<
   FormResponseAttributes,
-  'responseId' | 'userId' | 'createdAt' | 'updatedAt'
+  'responseId' | 'userId' | 'assignedTo' | 'status' | 'createdAt' | 'updatedAt'
 >;
 
 export class FormResponse
@@ -21,6 +23,8 @@ export class FormResponse
   public responseId!: number;
   public userId!: number;
   public formId!: number;
+  public assignedTo!: number;
+  public status!: number;
   public createdAt!: string;
   public updatedAt!: string;
 }
@@ -42,6 +46,16 @@ FormResponse.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       field: 'form_id',
+    },
+    assignedTo: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'assigned_to',
+    },
+    status: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'status',
     },
     createdAt: {
       type: DataTypes.DATE,

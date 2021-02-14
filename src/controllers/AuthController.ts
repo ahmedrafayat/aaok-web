@@ -236,7 +236,7 @@ export const AuthController = {
 
       if (decodedToken && typeof decodedToken !== 'string' && decodedToken['id']) {
         user = await User.findByPk(decodedToken.id);
-        if (!user) {
+        if (!user || user.resetToken !== token) {
           res.send(
             new createError.Unauthorized(
               'The password reset link is invalid, please try again with a new link'

@@ -20,6 +20,11 @@ const refresh_token_secret =
     ? process.env.PROD_REFRESH_TOKEN_SECRET
     : process.env.DEV_REFRESH_TOKEN_SECRET;
 
+const reset_pass_token_secret =
+  process.env.NODE_ENV === 'production'
+    ? process.env.PROD_PASS_RESET_SECRET
+    : process.env.DEV_PASS_RESET_SECRET;
+
 export type UserData = {
   firstName: string;
   lastName: string;
@@ -141,5 +146,41 @@ export const JwtUtils = {
     } catch (error) {
       throw error;
     }
+  },
+  signPasswordResetToken: async (userId: number): Promise<string | undefined> => {
+    return new Promise((resolve, reject) => {
+      if (reset_pass_token_secret) {
+        const options: SignOptions = {
+          expiresIn: '20m',
+          issuer: process.env.HOST_URL,
+        };
+        JWT.sign({ id: userId }, reset_pass_token_secret, options, (err, token) => {
+          if (err) {
+            reject(new createError.InternalServerError());
+          }
+          resolve(token);
+        });
+      } else {
+        reject(new createError.InternalServerError());
+      }
+    });
+  },
+  verifyPasswordResetToken: async (token: string): Promise<boolean> => {
+    return new Promise((resolve, reject) => {
+      if (reset_pass_token_secret) {
+        JWT.verify(token, reset_pass_token_secret, (err, decodedToken) => {
+          if (err) {
+            const message = err.name === 'JsonWebTokenError' ? 'Unauthorized' : err.message;
+            reject(err);
+          } else if (decodedToken) {
+            resolve(true);
+          } else {
+            reject('Failed to decode token');
+          }
+        });
+      } else {
+        reject(new createError.InternalServerError());
+      }
+    });
   },
 };

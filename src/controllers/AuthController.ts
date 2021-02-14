@@ -1,14 +1,15 @@
 import createError from 'http-errors';
 import { Op, UniqueConstraintError } from 'sequelize';
 import { NextFunction, Request, Response } from 'express';
+import JWT from 'jsonwebtoken';
 
 import { User } from '../models/User';
 import { JwtUtils } from '../utils/jwtUtils';
 import { redisClient } from '../utils/initRedis';
+import { sendResetPasswordEmail } from '../config/nodemailer';
 
 export const AuthController = {
   register: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    console.log(req.body);
     try {
       const { email, password, firstName, lastName } = req.body;
       if (!email || !password || !firstName || !lastName)
@@ -156,7 +157,6 @@ export const AuthController = {
           console.log(err.message);
           throw new createError.InternalServerError();
         }
-        console.log('User successfully logged out', reply);
         res.send(204);
       });
     } catch (error) {
@@ -202,6 +202,75 @@ export const AuthController = {
       } else throw new createError.InternalServerError();
     } catch (error) {
       next(error);
+    }
+  },
+
+  forgotPassword: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const email = req.body.email.trim();
+      const user = await User.findOne({ where: { email: email } });
+      if (user) {
+        const token = await JwtUtils.signPasswordResetToken(user.userId);
+        if (token) {
+          user.resetToken = token;
+          await user.save();
+          sendResetPasswordEmail({
+            name: `${user.firstName} ${user.lastName}`,
+            resetToken: token,
+            toEmail: user.email,
+          });
+        }
+      }
+      res.send(200);
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  resetPassword: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const password = req.body.password.trim();
+      const token = req.body.token.trim();
+      const decodedToken = JWT.decode(token);
+      let user;
+
+      if (decodedToken && typeof decodedToken !== 'string' && decodedToken['id']) {
+        user = await User.findByPk(decodedToken.id);
+        if (!user) {
+          res.send(
+            new createError.Unauthorized(
+              'The password reset link is invalid, please try again with a new link'
+            )
+          );
+          return;
+        }
+      } else {
+        res.send(
+          new createError.Unauthorized(
+            'The password reset link is invalid, please try again with a new link'
+          )
+        );
+        return;
+      }
+
+      if (password && token && user) {
+        const isValidToken = await JwtUtils.verifyPasswordResetToken(token);
+        if (isValidToken) {
+          user.password = password;
+          await user.save();
+          res.send(200);
+        } else {
+          res.send(new createError.Unauthorized('Invalid token'));
+        }
+      } else {
+        res.send(new createError.BadRequest());
+      }
+    } catch (e) {
+      if (e.name === 'TokenExpiredError') {
+        next(new createError.Unauthorized('Token has expired'));
+      } else {
+        next(new createError.InternalServerError());
+      }
     }
   },
 };

@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
+import { Transaction, QueryTypes, fn, col } from 'sequelize';
+import createHttpError from 'http-errors';
 import { Field } from '../models/Field';
 import { FormResponse } from '../models/FormResponse';
-import { Transaction, QueryTypes, fn, col } from 'sequelize';
 import { Answer, AnswerCreationAttributes } from '../models/Answer';
-import createHttpError from 'http-errors';
 import formResponseUtil = require('../utils/formResponseUtils');
 
 import { sequelize } from '../config/sequelize';
@@ -170,6 +170,24 @@ export const FormResponseController = {
       });
     } catch (error) {
       next(error);
+    }
+  },
+  saveAdminFields: async (req: Request, res: Response, next: NextFunction) => {
+    const responseId = req.params.responseId;
+    const { assignedTo, status, notes } = req.body;
+    try {
+      const response = await FormResponse.findByPk(responseId);
+      if (response) {
+        response.assignedTo = assignedTo === 0 ? null : assignedTo;
+        response.status = status;
+        response.notes = notes;
+        await response.save();
+        res.status(200).send({ assignedTo, status, notes });
+      } else {
+        throw new createHttpError.BadRequest('Form Response not found');
+      }
+    } catch (e) {
+      next(e);
     }
   },
 };

@@ -9,4 +9,6 @@ router.get('/', FormResponseController.getResponses);
 
 router.get('/:responseId', FormResponseController.getResponse);
 
+router.patch('/:responseId', FormResponseController.saveAdminFields);
+
 export const FormResponseRouter = router;

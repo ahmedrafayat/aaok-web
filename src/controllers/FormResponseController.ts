@@ -1,12 +1,13 @@
 import { NextFunction, Request, Response } from 'express';
 import { Field } from '../models/Field';
 import { FormResponse } from '../models/FormResponse';
-import { Transaction, QueryTypes } from 'sequelize';
+import { Transaction, QueryTypes, fn, col } from 'sequelize';
 import { Answer, AnswerCreationAttributes } from '../models/Answer';
 import createHttpError from 'http-errors';
 import formResponseUtil = require('../utils/formResponseUtils');
 
 import { sequelize } from '../config/sequelize';
+import { User } from '../models/User';
 
 const fetchResponseAnswersQuery = `
 SELECT
@@ -28,13 +29,18 @@ SELECT
     f.title,
     f.description,
     u.email,
-    COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "submitter"
+    COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "submitter",
+    COALESCE(u2.first_name || ' ' || u2.last_name, '') "assignedTo",
+    r.status status,
+    r.notes notes
 FROM
     responses r
 INNER JOIN forms f ON
     f.form_id = r.form_id
 LEFT JOIN users u ON
     u.user_id = r.user_id
+LEFT JOIN users u2 ON
+    u2.user_id = r.assigned_to
 WHERE
     r.response_id = :responseId
 `;
@@ -150,8 +156,16 @@ export const FormResponseController = {
         type: QueryTypes.SELECT,
       });
 
+      const adminUsers = await User.findAll({
+        where: {
+          isManagement: 1,
+        },
+        attributes: ['user_id', [fn('CONCAT', col('first_name'), ' ', col('last_name')), 'name']],
+      });
+
       res.send({
         ...formData[0],
+        adminUsers,
         answers: answers,
       });
     } catch (error) {

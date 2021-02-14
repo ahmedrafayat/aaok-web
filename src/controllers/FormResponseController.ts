@@ -30,7 +30,7 @@ SELECT
     f.description,
     u.email,
     COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "submitter",
-    COALESCE(u2.first_name || ' ' || u2.last_name, '') "assignedTo",
+    COALESCE(u2.first_name || ' ' || u2.last_name, null) "assignedTo",
     r.status status,
     r.notes notes
 FROM

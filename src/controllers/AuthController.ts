@@ -157,7 +157,7 @@ export const AuthController = {
           console.log(err.message);
           throw new createError.InternalServerError();
         }
-        res.send(204);
+        res.sendStatus(204);
       });
     } catch (error) {
       next(error);
@@ -221,7 +221,7 @@ export const AuthController = {
           });
         }
       }
-      res.send(200);
+      res.sendStatus(200);
     } catch (e) {
       next(e);
     }

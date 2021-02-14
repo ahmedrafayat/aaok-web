@@ -28,7 +28,7 @@ export const AuthController = {
       });
 
       const newUser: User = new User({
-        email: String(email),
+        email: String(email).toLowerCase(),
         password: String(password),
         firstName: String(firstName),
         lastName: String(lastName),
@@ -208,7 +208,13 @@ export const AuthController = {
   forgotPassword: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const email = req.body.email.trim();
-      const user = await User.findOne({ where: { email: email } });
+      const user = await User.findOne({
+        where: {
+          email: {
+            [Op.iLike]: email,
+          },
+        },
+      });
       if (user) {
         const token = await JwtUtils.signPasswordResetToken(user.userId);
         if (token) {

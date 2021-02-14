@@ -57,6 +57,7 @@ FormResponse.init(
     status: {
       type: DataTypes.INTEGER,
       allowNull: true,
+      defaultValue: 0,
       field: 'status',
     },
     notes: {

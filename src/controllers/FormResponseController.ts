@@ -102,12 +102,18 @@ export const FormResponseController = {
   },
   getResponses: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { form, user, startDate, endDate } = req.query;
+      const { form, user, assignedTo, status, startDate, endDate } = req.query;
 
-      const filterQuery = buildFilterQuery(form as string, user as string, {
-        startDate: startDate as string,
-        endDate: endDate as string,
-      });
+      const filterQuery = buildFilterQuery(
+        form as string,
+        user as string,
+        assignedTo as string,
+        status as string | null,
+        {
+          startDate: startDate as string,
+          endDate: endDate as string,
+        }
+      );
 
       const result = await sequelize.query(
         `
@@ -195,6 +201,8 @@ export const FormResponseController = {
 const buildFilterQuery = (
   forms: string,
   users: string,
+  assignedTo: string,
+  status: string | null,
   dateRange: { startDate: string; endDate: string }
 ) => {
   const filters = [];
@@ -208,6 +216,12 @@ const buildFilterQuery = (
     filters.push(
       `r.created_at::date >= '${dateRange.startDate}' AND r.created_at::date <= '${dateRange.endDate}'`
     );
+  }
+  if (status && status.length > 0) {
+    filters.push(`r.status IN (${status})`);
+  }
+  if (assignedTo && assignedTo.length > 0) {
+    filters.push(`r.assigned_to IN (${assignedTo})`);
   }
 
   if (filters.length > 0) {

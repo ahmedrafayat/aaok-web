@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import createHttpError from 'http-errors';
-import { QueryTypes } from 'sequelize';
+import { col, fn, Op, QueryTypes } from 'sequelize';
 
 import { User } from '../models/User';
 import { sequelize } from '../config/sequelize';
@@ -39,20 +39,6 @@ ORDER BY
     u.user_id ASC
 `;
 
-const userSearchQuery = `
-SELECT 
-    user_id "userId",
-    first_name || ' ' || last_name "name",
-    email
-FROM 
-    users u 
-WHERE 
-    u.first_name ILIKE :term
-    OR u.last_name ILIKE :term
-    OR u.email ILIKE :term
-LIMIT 25
-`;
-
 export const UserController = {
   getUsers: async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -68,10 +54,42 @@ export const UserController = {
   getUserByName: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const term = req.query.name || '';
+      const admin = req.query.admin === 'true' || false;
+      let adminCond = admin
+        ? [
+            {
+              isManagement: 1,
+            },
+          ]
+        : [];
 
-      const users = await sequelize.query(userSearchQuery, {
-        type: QueryTypes.SELECT,
-        replacements: { term: '%' + term + '%' },
+      const users = await User.findAll({
+        limit: 25,
+        attributes: [
+          ['user_id', 'userId'],
+          [fn('CONCAT', col('first_name'), ' ', col('last_name')), 'name'],
+          'email',
+        ],
+        where: {
+          [Op.or]: [
+            {
+              lastName: {
+                [Op.iLike]: `%${term}%`,
+              },
+            },
+            {
+              firstName: {
+                [Op.iLike]: `%${term}%`,
+              },
+            },
+            {
+              email: {
+                [Op.iLike]: `%${term}%`,
+              },
+            },
+          ],
+          [Op.and]: adminCond,
+        },
       });
 
       res.send(users);

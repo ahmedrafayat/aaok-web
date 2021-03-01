@@ -20,7 +20,7 @@ SELECT
    u.first_name || ' ' || u.last_name AS "name",
    (
    SELECT
-       count(*)
+       count(*)::INTEGER
    FROM
        responses r
    WHERE

@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { Transaction, QueryTypes, fn, col } from 'sequelize';
+import { Transaction, QueryTypes, fn, col, Op } from 'sequelize';
 import createHttpError from 'http-errors';
 import { Field } from '../models/Field';
 import { FormResponse } from '../models/FormResponse';
@@ -164,7 +164,9 @@ export const FormResponseController = {
 
       const adminUsers = await User.findAll({
         where: {
-          isManagement: 1,
+          isManagement: {
+            [Op.gt]: 0,
+          },
         },
         attributes: ['user_id', [fn('CONCAT', col('first_name'), ' ', col('last_name')), 'name']],
       });

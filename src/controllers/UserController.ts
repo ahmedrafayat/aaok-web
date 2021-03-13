@@ -58,7 +58,9 @@ export const UserController = {
       let adminCond = admin
         ? [
             {
-              isManagement: 1,
+              isManagement: {
+                [Op.gt]: 0,
+              },
             },
           ]
         : [];

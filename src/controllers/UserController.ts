@@ -28,12 +28,11 @@ SELECT
    u.email,
    u.is_enabled "isEnabled",
    u.is_registered "isRegistered",
+   u.is_management "isManagement",  
    u.created_at "createdAt",
    u.updated_at "updatedAt"
 FROM
    public.users u
-WHERE
-   u.is_management <> 1
 ORDER BY
     u.created_at DESC, 
     u.user_id ASC
@@ -58,7 +57,9 @@ export const UserController = {
       let adminCond = admin
         ? [
             {
-              isManagement: 1,
+              isManagement: {
+                [Op.gt]: 0,
+              },
             },
           ]
         : [];
@@ -102,7 +103,7 @@ export const UserController = {
       const userId = req.params.userId;
       const newStatus = req.body.status;
 
-      let user = await User.findByPk(Number(userId));
+      const user = await User.findByPk(Number(userId));
 
       if (newStatus === undefined) {
         throw new createHttpError.BadRequest();
@@ -129,6 +130,34 @@ export const UserController = {
       }
 
       res.send({ isEnabled: user.isEnabled });
+    } catch (error) {
+      next(error);
+    }
+  },
+  changeAdminStatus: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.params.userId;
+      const newStatus = req.body.status;
+
+      const user = await User.findByPk(Number(userId));
+
+      if (newStatus === undefined) {
+        throw new createHttpError.BadRequest();
+      }
+
+      if (user) {
+        const updateUsers = await User.update(
+          { isManagement: Number(newStatus) },
+          { where: { userId: userId } }
+        );
+        if (updateUsers.length > 0) {
+          user.isManagement = Number(newStatus);
+        }
+      } else {
+        throw new createHttpError.BadRequest('User does not exist');
+      }
+
+      res.send({ isManagement: user.isManagement });
     } catch (error) {
       next(error);
     }

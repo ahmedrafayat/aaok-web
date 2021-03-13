@@ -29,7 +29,6 @@ const upload = multer({
 
 router.post('/', async (req, res, next) => {
   try {
-    console.log('In Upload');
     upload(req, res, (err: any) => {
       if (err) {
         console.error('FILE UPLOAD', err.message || 'ERROR UPLOADING FILE');

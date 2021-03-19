@@ -182,7 +182,7 @@ export const AuthController = {
         throw new createError.NotFound('User Not Registered');
       }
 
-      if (!user.isEnabled || user.isManagement === 0) {
+      if (user.isManagement === 0) {
         throw new createError.Unauthorized('You are not allowed to access this site');
       }
 

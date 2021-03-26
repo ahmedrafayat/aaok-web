@@ -144,10 +144,10 @@ export const sendEnabledEmail = (options: SendEnabledEmailOptions): Promise<bool
 
     transporter.sendMail(mailOptions, (err, data) => {
       if (err) {
-        console.log('Error occurred while sending email', err);
+        console.error('Error occurred while sending email', err);
         reject(false);
       } else {
-        console.log('Email sent successfully!!', data);
+        console.log('Email sent successfully!!');
         resolve(true);
       }
     });
@@ -281,10 +281,10 @@ export const sendResetPasswordEmail = (options: SendResetPasswordEmailOptions) =
 
     transporter.sendMail(mailOptions, (err, data) => {
       if (err) {
-        console.log('Error occurred while sending email', err);
+        console.error('Error occurred while sending email', err);
         reject(false);
       } else {
-        console.log('Email sent successfully!!', data);
+        console.log('Email sent successfully!!');
         resolve(true);
       }
     });

@@ -243,40 +243,34 @@ export const AuthController = {
       if (decodedToken && typeof decodedToken !== 'string' && decodedToken['id']) {
         user = await User.findByPk(decodedToken.id);
         if (!user || user.resetToken !== token) {
-          res.send(
-            new createError.Unauthorized(
-              'The password reset link is invalid, please try again with a new link'
-            )
+          throw new createError.Unauthorized(
+            'The password reset link is invalid or expired, please try again with a new link'
           );
-          return;
         }
       } else {
-        res.send(
-          new createError.Unauthorized(
-            'The password reset link is invalid, please try again with a new link'
-          )
+        throw new createError.Unauthorized(
+          'The password reset link is invalid or expired, please try again with a new link'
         );
-        return;
       }
 
       if (password && token && user) {
         const isValidToken = await JwtUtils.verifyPasswordResetToken(token);
         if (isValidToken) {
           user.password = password;
+          user.resetToken = '';
           await user.save();
-          res.send(200);
+          res.send({ isManagement: user.isManagement });
         } else {
-          res.send(new createError.Unauthorized('Invalid token'));
+          throw new createError.Unauthorized('Invalid token');
         }
       } else {
-        res.send(new createError.BadRequest());
+        throw new createError.BadRequest();
       }
     } catch (e) {
       if (e.name === 'TokenExpiredError') {
         next(new createError.Unauthorized('Token has expired'));
-      } else {
-        next(new createError.InternalServerError());
       }
+      next(e);
     }
   },
 };

@@ -6,6 +6,7 @@
   "scripts": {
     "start": "nodemon src/index.ts",
     "build": "export NODE_ENV=production && rm -rf build && tsc && pm2 start --name aaok-web build/index.js",
+    "stop": "pm2 stop aaok-web",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },

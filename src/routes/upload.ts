@@ -1,13 +1,20 @@
 import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
+import sanitizeFilename from 'sanitize-filename';
 
 const router = Router();
 
 const storage = multer.diskStorage({
   destination: './public/uploads',
   filename(req, file, callback) {
-    callback(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+    callback(
+      null,
+      sanitizeFilename(path.parse(file.originalname).name) +
+        '-' +
+        Date.now() +
+        path.extname(file.originalname)
+    );
   },
 });
 

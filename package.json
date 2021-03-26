@@ -27,6 +27,7 @@
     "pg": "^8.5.1",
     "pg-hstore": "^2.3.3",
     "redis": "^3.0.2",
+    "sanitize-filename": "^1.6.3",
     "sequelize": "^6.3.5"
   },
   "devDependencies": {

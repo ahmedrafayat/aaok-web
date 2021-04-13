@@ -7,6 +7,8 @@ router.post('/:formId', FormResponseController.submitForm);
 
 router.get('/', FormResponseController.getResponses);
 
+router.get('/csv', FormResponseController.getCsvGenerationData);
+
 router.get('/:responseId', FormResponseController.getResponse);
 
 router.patch('/:responseId', FormResponseController.saveAdminFields);

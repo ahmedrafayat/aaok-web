@@ -20,12 +20,11 @@ import { sequelize } from './config/sequelize';
 const port = process.env.PORT || 5000;
 const apiBaseUrl = process.env.API_BASE_URL;
 const app = express();
-const env = process.env.NODE_ENV;
 
 app.use(compression());
 app.use(morgan('dev'));
 app.use(cors());
-app.use(express.urlencoded());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('./public'));
 

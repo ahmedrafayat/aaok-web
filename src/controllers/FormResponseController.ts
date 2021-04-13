@@ -1,13 +1,12 @@
 import { NextFunction, Request, Response } from 'express';
-import { Transaction, QueryTypes, fn, col, Op } from 'sequelize';
+import { col, fn, Op, QueryTypes, Transaction } from 'sequelize';
 import createHttpError from 'http-errors';
 import { Field } from '../models/Field';
 import { FormResponse } from '../models/FormResponse';
 import { Answer, AnswerCreationAttributes } from '../models/Answer';
-import formResponseUtil = require('../utils/formResponseUtils');
-
 import { sequelize } from '../config/sequelize';
 import { User } from '../models/User';
+import formResponseUtil = require('../utils/formResponseUtils');
 
 const fetchResponseAnswersQuery = `
 SELECT
@@ -43,6 +42,59 @@ LEFT JOIN users u2 ON
     u2.user_id = r.assigned_to
 WHERE
     r.response_id = :responseId
+`;
+
+const fetchResponseListQuery = (filterQuery: string) => `
+SELECT
+    r.response_id "responseId",
+    f.title title,
+    COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "name",
+    u.email email,
+    COALESCE(u2.first_name || ' ' || u2.last_name, '') "assignedTo",
+    r.status status,
+    r.created_at "createdAt",
+    (
+    SELECT
+        array_to_json(array_agg(row_to_json(t)))
+    FROM
+        (
+        SELECT
+            a2.value -> 'value' "value",
+            f2.field_key "fieldKey"
+        FROM
+            answers a2,
+            fields f2
+        WHERE
+            f2.field_id = a2.field_id
+            AND a2.response_id = r.response_id
+            AND f2.field_type IN (0, 7)) t) "extraFields"
+FROM
+    responses r
+INNER JOIN forms f ON
+    r.form_id = f.form_id
+LEFT JOIN users u ON
+    r.user_id = u.user_id
+LEFT JOIN users u2 ON
+    r.assigned_to = u2.user_id
+${filterQuery}
+ORDER BY
+    r.created_at DESC,
+    r.response_id ASC
+`;
+
+const fetchCsvGenerationData = (responseIds: string) => `
+select
+    a.value ->> 'value' "value",
+    a.response_id "responseId",
+    f.field_key "fieldKey",
+    f.label 
+from
+    answers a,
+    fields f
+where
+    f.field_id = a.field_id
+    and a.response_id in (${responseIds})
+    and f.field_type in (0, 7)
 `;
 
 export const FormResponseController = {
@@ -115,33 +167,9 @@ export const FormResponseController = {
         }
       );
 
-      const result = await sequelize.query(
-        `
-      SELECT
-        r.response_id "responseId",
-        f.title title,
-        COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "name",
-        u.email email,
-        COALESCE(u2.first_name || ' ' || u2.last_name, '') "assignedTo",
-	      r.status status,
-        r.created_at "createdAt"
-      FROM
-        responses r
-      INNER JOIN forms f ON
-        r.form_id = f.form_id 
-      LEFT JOIN users u ON
-        r.user_id = u.user_id
-      LEFT JOIN users u2 on 
-        r.assigned_to = u2.user_id 
-      ${filterQuery}
-      ORDER BY
-        r.created_at DESC, 
-        r.response_id ASC
-      `,
-        {
-          type: QueryTypes.SELECT,
-        }
-      );
+      const result = await sequelize.query(fetchResponseListQuery(filterQuery), {
+        type: QueryTypes.SELECT,
+      });
 
       res.send(result);
     } catch (error) {
@@ -180,6 +208,24 @@ export const FormResponseController = {
       next(error);
     }
   },
+  getCsvGenerationData: async (req: Request, res: Response, next: NextFunction) => {
+    const responseIds = req.query.responseIds;
+    console.log(responseIds);
+
+    try {
+      if (typeof responseIds === 'string' && responseIds.length > 0) {
+        const result = await sequelize.query(fetchCsvGenerationData(responseIds), {
+          type: QueryTypes.SELECT,
+        });
+        res.send(result);
+      } else {
+        next(new createHttpError.BadRequest());
+      }
+    } catch (e) {
+      console.error(e.message);
+      next(e);
+    }
+  },
   saveAdminFields: async (req: Request, res: Response, next: NextFunction) => {
     const responseId = req.params.responseId;
     const { assignedTo, status, notes } = req.body;
@@ -192,7 +238,7 @@ export const FormResponseController = {
         await response.save();
         res.status(200).send({ assignedTo, status, notes });
       } else {
-        throw new createHttpError.BadRequest('Form Response not found');
+        next(new createHttpError.BadRequest('Form Response not found'));
       }
     } catch (e) {
       next(e);

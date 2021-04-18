@@ -51,6 +51,7 @@ SELECT
     COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "name",
     u.email email,
     COALESCE(u2.first_name || ' ' || u2.last_name, '') "assignedTo",
+    r.notes notes,
     r.status status,
     r.created_at "createdAt",
     (
@@ -67,7 +68,7 @@ SELECT
         WHERE
             f2.field_id = a2.field_id
             AND a2.response_id = r.response_id
-            AND f2.field_type IN (0, 7)) t) "extraFields"
+            AND f2.field_type IN (0, 3, 7)) t) "extraFields"
 FROM
     responses r
 INNER JOIN forms f ON

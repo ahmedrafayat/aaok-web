@@ -11,21 +11,25 @@ type SendResetPasswordEmailOptions = {
   resetToken: string;
 };
 
+const fromEmail = process.env.NODEMAILER_EMAIL || 'admin@associatedasphalt.biz';
+const mailerUser = process.env.NODEMAILER_EMAIL;
+const mailerPass = process.env.NODEMAILER_PASS;
+
 const transporter = nodemailer.createTransport({
   service: 'Outlook365',
   host: 'smtp.office365.com',
   port: 465,
-  secure: true, // true for 465, false for other ports
+  secure: true,
   auth: {
-    user: process.env.NODEMAILER_EMAIL, // generated ethereal user
-    pass: process.env.NODEMAILER_PASS, // generated ethereal password
+    user: mailerUser,
+    pass: mailerPass,
   },
 });
 
 export const sendEnabledEmail = (options: SendEnabledEmailOptions): Promise<boolean> => {
   return new Promise((resolve, reject) => {
     const mailOptions: SendMailOptions = {
-      from: `"AAOK" <${process.env.NODEMAILER_EMAIL || 'admin@associatedasphalt.biz'}>`,
+      from: `"AAOK" <${fromEmail}>`,
       to: options.toEmail,
       subject: 'AAOK: Your account has been activated!',
       html: `
@@ -157,7 +161,7 @@ export const sendEnabledEmail = (options: SendEnabledEmailOptions): Promise<bool
 export const sendResetPasswordEmail = (options: SendResetPasswordEmailOptions) => {
   return new Promise((resolve, reject) => {
     const mailOptions: SendMailOptions = {
-      from: `"AAOK" <${process.env.NODEMAILER_EMAIL || 'admin@associatedasphalt.biz'}>`,
+      from: `"AAOK" <${fromEmail}>`,
       to: options.toEmail,
       subject: 'AAOK: Reset Password',
       html: `
@@ -230,7 +234,7 @@ export const sendResetPasswordEmail = (options: SendResetPasswordEmailOptions) =
             table td { border-collapse: collapse; }
             </style>
             <![endif]-->
-          <title>Your AAOK Account has been activated!</title>
+          <title>Reset Password</title>
           <!-- content -->
           <!--[if gte mso 9]><xml>
             <o:OfficeDocumentSettings>

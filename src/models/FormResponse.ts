@@ -2,12 +2,18 @@ import { DataTypes, Model, Optional } from 'sequelize';
 
 import { sequelize } from '../config/sequelize';
 
+export enum FormResponseStatus {
+  PENDING = 0,
+  IN_PROGRESS = 1,
+  RESOLVED = 2,
+}
+
 interface FormResponseAttributes {
   responseId: number;
   userId: number;
   formId: number;
   assignedTo: number;
-  status: number;
+  status: FormResponseStatus;
   notes: string;
   createdAt: string;
   updatedAt: string;
@@ -25,7 +31,7 @@ export class FormResponse
   public userId!: number;
   public formId!: number;
   public assignedTo!: number;
-  public status!: number;
+  public status!: FormResponseStatus;
   public notes!: string;
   public createdAt!: string;
   public updatedAt!: string;
@@ -57,7 +63,7 @@ FormResponse.init(
     status: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      defaultValue: 0,
+      defaultValue: FormResponseStatus.PENDING,
       field: 'status',
     },
     notes: {

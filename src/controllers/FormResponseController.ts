@@ -2,11 +2,13 @@ import { NextFunction, Request, Response } from 'express';
 import { col, fn, Op, QueryTypes, Transaction } from 'sequelize';
 import createHttpError from 'http-errors';
 import { Field } from '../models/Field';
-import { FormResponse } from '../models/FormResponse';
+import { FormResponse, FormResponseStatus } from '../models/FormResponse';
 import { Answer, AnswerCreationAttributes } from '../models/Answer';
 import { sequelize } from '../config/sequelize';
-import { User } from '../models/User';
+import { User, UserManagementTypes } from '../models/User';
 import formResponseUtil = require('../utils/formResponseUtils');
+import { notificationService } from '../notification/NotificationService';
+import { NotificationMessage } from '../notification/NotificationMessage';
 
 const fetchResponseAnswersQuery = `
 SELECT
@@ -194,7 +196,7 @@ export const FormResponseController = {
       const adminUsers = await User.findAll({
         where: {
           isManagement: {
-            [Op.gt]: 0,
+            [Op.gt]: UserManagementTypes.NORMAL_USER,
           },
         },
         attributes: ['user_id', [fn('CONCAT', col('first_name'), ' ', col('last_name')), 'name']],
@@ -230,13 +232,43 @@ export const FormResponseController = {
   saveAdminFields: async (req: Request, res: Response, next: NextFunction) => {
     const responseId = req.params.responseId;
     const { assignedTo, status, notes } = req.body;
+    // console.log('-> req.body', req.body);
     try {
       const response = await FormResponse.findByPk(responseId);
+      // console.log('-> response', response);
       if (response) {
-        response.assignedTo = assignedTo === 0 ? null : assignedTo;
+        let shouldSendAdminAssignmentNotification = false;
+        let shouldNotifyUserResponseInProgress = false;
+        if (
+          (response.assignedTo === null && Number(assignedTo) !== 0) ||
+          Number(response.assignedTo) !== Number(assignedTo)
+        ) {
+          shouldSendAdminAssignmentNotification = true;
+        }
+
+        if (Number(status) === FormResponseStatus.IN_PROGRESS) {
+          shouldNotifyUserResponseInProgress = true;
+        }
+
+        response.assignedTo = Number(assignedTo) === 0 ? null : assignedTo;
         response.status = status;
         response.notes = notes;
-        await response.save();
+        const savedResponse = await response.save();
+
+        if (savedResponse && shouldNotifyUserResponseInProgress) {
+          const notificationMessage = new NotificationMessage(
+            'Response in progress',
+            'And here is the body!',
+            {
+              someData: 'goes here',
+            }
+          );
+          notificationService
+            .sendPushNotification('ExponentPushToken[sOjcq2MTWxPBDiXfjh83jW]', notificationMessage)
+            .then((res) => console.log('-> res success', res))
+            .catch((err) => console.error(err));
+        }
+
         res.status(200).send({ assignedTo, status, notes });
       } else {
         next(new createHttpError.BadRequest('Form Response not found'));

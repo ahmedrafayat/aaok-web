@@ -9,6 +9,7 @@ import { User, UserManagementTypes } from '../models/User';
 import formResponseUtil = require('../utils/formResponseUtils');
 import { notificationService } from '../notification/NotificationService';
 import { NotificationMessage } from '../notification/NotificationMessage';
+import { AppRequest } from '../models/types/AppRequest';
 
 const fetchResponseAnswersQuery = `
 SELECT
@@ -101,11 +102,13 @@ where
 `;
 
 export const FormResponseController = {
-  submitForm: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  submitForm: async (req: AppRequest, res: Response, next: NextFunction): Promise<void> => {
     const formId = Number(req.params.formId);
     const responseAnswers = req.body;
-    // @ts-ignore
-    let userId = req.payload.id;
+    if (!req.payload) {
+      return;
+    }
+    let userId: number | null = req.payload.id;
 
     if (formResponseUtil.isAnonymousResponse(responseAnswers)) {
       userId = null;

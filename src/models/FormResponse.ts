@@ -10,7 +10,7 @@ export enum FormResponseStatus {
 
 interface FormResponseAttributes {
   responseId: number;
-  userId: number;
+  userId: number | null;
   formId: number;
   assignedTo: number;
   status: FormResponseStatus;
@@ -28,7 +28,7 @@ export class FormResponse
   extends Model<FormResponseAttributes, FormResponseCreationAttributes>
   implements FormResponseAttributes {
   public responseId!: number;
-  public userId!: number;
+  public userId!: number | null;
   public formId!: number;
   public assignedTo!: number;
   public status!: FormResponseStatus;

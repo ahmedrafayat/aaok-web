@@ -2,8 +2,7 @@ import createError from 'http-errors';
 import { Op, UniqueConstraintError } from 'sequelize';
 import { NextFunction, Request, Response } from 'express';
 import JWT from 'jsonwebtoken';
-
-import { User } from '../models/User';
+import { User, UserManagementTypes } from '../models/User';
 import { JwtUtils } from '../utils/jwtUtils';
 import { redisClient } from '../utils/initRedis';
 import { sendResetPasswordEmail } from '../config/nodemailer';
@@ -33,7 +32,7 @@ export const AuthController = {
         firstName: String(firstName),
         lastName: String(lastName),
         isRegistered: 1,
-        isManagement: 0,
+        isManagement: UserManagementTypes.NORMAL_USER,
       });
 
       if (
@@ -70,7 +69,7 @@ export const AuthController = {
             password,
             firstName,
             lastName,
-            isManagement: 0,
+            isManagement: UserManagementTypes.NORMAL_USER,
             isRegistered: 1,
             isEnabled: 0,
           },
@@ -182,7 +181,7 @@ export const AuthController = {
         throw new createError.NotFound('User Not Registered');
       }
 
-      if (user.isManagement === 0) {
+      if (user.isManagement === UserManagementTypes.NORMAL_USER) {
         throw new createError.Unauthorized('You are not allowed to access this site');
       }
 

@@ -1,7 +1,6 @@
-import { SignOptions } from 'jsonwebtoken';
+import JWT, { SignOptions } from 'jsonwebtoken';
 import { compare } from 'bcrypt';
 import createError from 'http-errors';
-import JWT from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
 
 import { redisClient } from './initRedis';

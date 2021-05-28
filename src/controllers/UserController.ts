@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import createHttpError from 'http-errors';
 import { col, fn, Op, QueryTypes } from 'sequelize';
 
-import { User } from '../models/User';
+import { User, UserManagementTypes } from '../models/User';
 import { sequelize } from '../config/sequelize';
 import { sendEnabledEmail } from '../config/nodemailer';
 
@@ -54,11 +54,11 @@ export const UserController = {
     try {
       const term = req.query.name || '';
       const admin = req.query.admin === 'true' || false;
-      let adminCond = admin
+      const adminCond = admin
         ? [
             {
               isManagement: {
-                [Op.gt]: 0,
+                [Op.gt]: UserManagementTypes.NORMAL_USER,
               },
             },
           ]
@@ -108,8 +108,6 @@ export const UserController = {
       if (newStatus === undefined) {
         throw new createHttpError.BadRequest();
       }
-
-      let emailSent = false;
 
       if (user) {
         const updateUsers = await User.update(

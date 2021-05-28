@@ -5,6 +5,12 @@ import { sequelize } from '../config/sequelize';
 
 const SALT_ROUNDS = 10;
 
+export enum UserManagementTypes {
+  NORMAL_USER = 0,
+  ADMIN = 1,
+  SUPERUSER = 2,
+}
+
 interface UserAttributes {
   userId: number;
   firstName: string;
@@ -13,7 +19,7 @@ interface UserAttributes {
   password: string;
   isEnabled: number;
   isRegistered: number;
-  isManagement: number;
+  isManagement: UserManagementTypes;
   resetToken: string;
   createdAt: string;
   updatedAt: string;
@@ -40,7 +46,7 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   public password!: string;
   public isEnabled!: number;
   public isRegistered!: number;
-  public isManagement!: number;
+  public isManagement!: UserManagementTypes;
   public resetToken!: string;
 
   public createdAt!: string;

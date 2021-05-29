@@ -2,6 +2,7 @@ import { genSalt, hash } from 'bcrypt';
 import { DataTypes, Model, Optional } from 'sequelize';
 
 import { sequelize } from '../config/sequelize';
+import { NotificationToken } from './NotificationToken';
 
 const SALT_ROUNDS = 10;
 
@@ -48,6 +49,8 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   public isRegistered!: number;
   public isManagement!: UserManagementTypes;
   public resetToken!: string;
+
+  public readonly notificationTokens?: NotificationToken[];
 
   public createdAt!: string;
   public updatedAt!: string;

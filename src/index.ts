@@ -1,5 +1,4 @@
 require('dotenv').config();
-
 import { HttpException } from './models/HttpException';
 import { ConnectionError } from 'sequelize';
 import express, { NextFunction, Request, Response } from 'express';
@@ -14,6 +13,7 @@ import { FormResponseRouter } from './routes/response';
 import { JwtUtils } from './utils/jwtUtils';
 import { UserRouter } from './routes/users';
 import { FieldRouter } from './routes/fields';
+import { TokenRouter } from './routes/tokens';
 import { FileUploadRouter } from './routes/upload';
 import { sequelize } from './config/sequelize';
 
@@ -44,6 +44,7 @@ app.use(`${apiBaseUrl}/auth`, AuthRouter);
 app.use(`${apiBaseUrl}/forms`, JwtUtils.verifyAccessToken, FormRouter);
 app.use(`${apiBaseUrl}/fields`, JwtUtils.verifyAccessToken, FieldRouter);
 app.use(`${apiBaseUrl}/responses`, JwtUtils.verifyAccessToken, FormResponseRouter);
+app.use(`${apiBaseUrl}/token`, JwtUtils.verifyAccessToken, TokenRouter);
 app.use(`${apiBaseUrl}/users`, JwtUtils.verifyAccessToken, UserRouter);
 app.use(`${apiBaseUrl}/upload`, JwtUtils.verifyAccessToken, FileUploadRouter);
 

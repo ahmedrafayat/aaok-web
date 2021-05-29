@@ -1,8 +1,8 @@
 import { Field } from '../models/Field';
-import { FieldType } from '../enums/FieldType';
+import { FieldType } from '../models/enums/FieldType';
 import { CheckValue, GenericValue, LocationValue } from '../models/Answer';
 
-export = {
+export const formResponseUtil = {
   generateValueType(
     field: Field,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

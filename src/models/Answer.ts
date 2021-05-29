@@ -1,6 +1,6 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 
-import { FieldType } from '../enums/FieldType';
+import { FieldType } from './enums/FieldType';
 import { sequelize } from '../config/sequelize';
 
 interface ValueType {
@@ -28,14 +28,9 @@ interface AnswerAttributes {
   updatedAt: string;
 }
 
-export type AnswerCreationAttributes = Optional<
-  AnswerAttributes,
-  'answerId' | 'createdAt' | 'updatedAt'
->;
+export type AnswerCreationAttributes = Optional<AnswerAttributes, 'answerId' | 'createdAt' | 'updatedAt'>;
 
-export class Answer
-  extends Model<AnswerAttributes, AnswerCreationAttributes>
-  implements AnswerAttributes {
+export class Answer extends Model<AnswerAttributes, AnswerCreationAttributes> implements AnswerAttributes {
   public answerId!: number;
   public responseId!: number;
   public fieldId!: number;

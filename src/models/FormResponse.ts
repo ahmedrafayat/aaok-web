@@ -1,14 +1,9 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 
 import { sequelize } from '../config/sequelize';
+import { FormResponseStatus } from './enums/FormResponseStatus';
 import { Form } from './Form';
 import { User } from './User';
-
-export enum FormResponseStatus {
-  PENDING = 0,
-  IN_PROGRESS = 1,
-  RESOLVED = 2,
-}
 
 interface FormResponseAttributes {
   responseId: number;

@@ -2,9 +2,10 @@ import { NextFunction, Request, Response } from 'express';
 import createHttpError from 'http-errors';
 import { col, fn, Op, QueryTypes } from 'sequelize';
 
-import { User, UserManagementTypes } from '../models/User';
+import { User } from '../models/User';
 import { sequelize } from '../config/sequelize';
 import { sendEnabledEmail } from '../config/nodemailer';
+import { UserManagementTypes } from '../models/enums/UserManagementTypes';
 
 const disabledUsersAfterLastEnabledCountQuery = `
 SELECT 
@@ -66,11 +67,7 @@ export const UserController = {
 
       const users = await User.findAll({
         limit: 25,
-        attributes: [
-          ['user_id', 'userId'],
-          [fn('CONCAT', col('first_name'), ' ', col('last_name')), 'name'],
-          'email',
-        ],
+        attributes: [['user_id', 'userId'], [fn('CONCAT', col('first_name'), ' ', col('last_name')), 'name'], 'email'],
         where: {
           [Op.or]: [
             {
@@ -106,14 +103,12 @@ export const UserController = {
       const user = await User.findByPk(Number(userId));
 
       if (newStatus === undefined) {
-        throw new createHttpError.BadRequest();
+        next(new createHttpError.BadRequest());
+        return;
       }
 
       if (user) {
-        const updateUsers = await User.update(
-          { isEnabled: Number(newStatus) },
-          { where: { userId: userId } }
-        );
+        const updateUsers = await User.update({ isEnabled: Number(newStatus) }, { where: { userId: userId } });
         if (updateUsers.length > 0) {
           user.isEnabled = Number(newStatus);
         }
@@ -124,7 +119,8 @@ export const UserController = {
           });
         }
       } else {
-        throw new createHttpError.BadRequest('User does not exist');
+        next(new createHttpError.BadRequest('User does not exist'));
+        return;
       }
 
       res.send({ isEnabled: user.isEnabled });
@@ -140,19 +136,17 @@ export const UserController = {
       const user = await User.findByPk(Number(userId));
 
       if (newStatus === undefined) {
-        throw new createHttpError.BadRequest();
+        next(new createHttpError.BadRequest());
+        return;
       }
 
       if (user) {
-        const updateUsers = await User.update(
-          { isManagement: Number(newStatus) },
-          { where: { userId: userId } }
-        );
+        const updateUsers = await User.update({ isManagement: Number(newStatus) }, { where: { userId: userId } });
         if (updateUsers.length > 0) {
           user.isManagement = Number(newStatus);
         }
       } else {
-        throw new createHttpError.BadRequest('User does not exist');
+        next(new createHttpError.BadRequest('User does not exist'));
       }
 
       res.send({ isManagement: user.isManagement });

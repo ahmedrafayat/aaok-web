@@ -2,16 +2,18 @@ import { NextFunction, Request, Response } from 'express';
 import { col, fn, Op, QueryTypes, Transaction } from 'sequelize';
 import createHttpError from 'http-errors';
 import { Field } from '../models/Field';
-import { FormResponse, FormResponseStatus } from '../models/FormResponse';
+import { FormResponse } from '../models/FormResponse';
 import { Answer, AnswerCreationAttributes } from '../models/Answer';
 import { sequelize } from '../config/sequelize';
-import { User, UserManagementTypes } from '../models/User';
+import { User } from '../models/User';
 import { notificationService } from '../notification/NotificationService';
 import { NotificationMessage } from '../notification/NotificationMessage';
 import { AppRequest } from '../models/types/AppRequest';
 import { Form } from '../models/Form';
 import { NotificationToken } from '../models/NotificationToken';
-import formResponseUtil = require('../utils/formResponseUtils');
+import { FormResponseStatus } from '../models/enums/FormResponseStatus';
+import { formResponseUtil } from '../utils/formResponseUtils';
+import { UserManagementTypes } from '../models/enums/UserManagementTypes';
 
 const fetchResponseAnswersQuery = `
 SELECT

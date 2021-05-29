@@ -3,14 +3,9 @@ import { DataTypes, Model, Optional } from 'sequelize';
 
 import { sequelize } from '../config/sequelize';
 import { NotificationToken } from './NotificationToken';
+import { UserManagementTypes } from './enums/UserManagementTypes';
 
 const SALT_ROUNDS = 10;
-
-export enum UserManagementTypes {
-  NORMAL_USER = 0,
-  ADMIN = 1,
-  SUPERUSER = 2,
-}
 
 interface UserAttributes {
   userId: number;

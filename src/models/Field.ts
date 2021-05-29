@@ -1,6 +1,6 @@
 import { DataTypes, Model, Optional, Sequelize } from 'sequelize';
 
-import { FieldType } from '../enums/FieldType';
+import { FieldType } from './enums/FieldType';
 import { sequelize } from '../config/sequelize';
 
 export interface FieldAttributes {
@@ -16,9 +16,7 @@ export interface FieldAttributes {
 
 type FieldCreationAttributes = Optional<FieldAttributes, 'fieldId' | 'createdAt' | 'updatedAt'>;
 
-export class Field
-  extends Model<FieldAttributes, FieldCreationAttributes>
-  implements FieldAttributes {
+export class Field extends Model<FieldAttributes, FieldCreationAttributes> implements FieldAttributes {
   public fieldId!: number;
   public formId!: number;
   public fieldKey!: string;

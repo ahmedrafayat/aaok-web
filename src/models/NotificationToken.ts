@@ -17,23 +17,21 @@ export class NotificationToken
   public tokenValue!: string;
   public userId!: number;
 
-  static async tokenExists(tokenToCheck: string) {
-    const existingToken = await NotificationToken.findOne({
-      where: {
-        tokenValue: {
-          [Op.eq]: tokenToCheck,
-        },
-      },
-    });
-
-    return existingToken !== null;
-  }
-
   static async findTokenByValue(tokenValue: string) {
     return await NotificationToken.findOne({
       where: {
         tokenValue: {
           [Op.eq]: tokenValue,
+        },
+      },
+    });
+  }
+
+  static async getUserTokens(userId: number) {
+    return await NotificationToken.findAll({
+      where: {
+        userId: {
+          [Op.eq]: userId,
         },
       },
     });

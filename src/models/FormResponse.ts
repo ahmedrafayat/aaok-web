@@ -1,6 +1,8 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 
 import { sequelize } from '../config/sequelize';
+import { Form } from './Form';
+import { User } from './User';
 
 export enum FormResponseStatus {
   PENDING = 0,
@@ -12,11 +14,11 @@ interface FormResponseAttributes {
   responseId: number;
   userId: number | null;
   formId: number;
-  assignedTo: number;
+  assignedTo: number | null;
   status: FormResponseStatus;
-  notes: string;
-  createdAt: string;
-  updatedAt: string;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 type FormResponseCreationAttributes = Optional<
@@ -30,11 +32,44 @@ export class FormResponse
   public responseId!: number;
   public userId!: number | null;
   public formId!: number;
-  public assignedTo!: number;
+  public assignedTo!: number | null;
   public status!: FormResponseStatus;
-  public notes!: string;
-  public createdAt!: string;
-  public updatedAt!: string;
+  public notes!: string | null;
+  public createdAt!: Date;
+  public updatedAt!: Date;
+
+  // This only exists with eager loading the model
+  public form?: Form;
+
+  public hasOwner() {
+    return this.userId !== null;
+  }
+
+  public isUnassigned() {
+    return this.assignedTo === null;
+  }
+
+  static getStatusText(status: FormResponseStatus) {
+    switch (status) {
+      case FormResponseStatus.PENDING:
+        return 'Pending';
+      case FormResponseStatus.IN_PROGRESS:
+        return 'In Progress';
+      case FormResponseStatus.RESOLVED:
+        return 'Resolved';
+    }
+  }
+
+  static getStatusNotificationBody(status: FormResponseStatus) {
+    switch (status) {
+      case FormResponseStatus.PENDING:
+        return '';
+      case FormResponseStatus.IN_PROGRESS:
+        return 'An Admin is currently reviewing your submission';
+      case FormResponseStatus.RESOLVED:
+        return 'An Admin has completed reviewing your submission';
+    }
+  }
 }
 
 FormResponse.init(
@@ -59,10 +94,11 @@ FormResponse.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       field: 'assigned_to',
+      defaultValue: null,
     },
     status: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
       defaultValue: FormResponseStatus.PENDING,
       field: 'status',
     },
@@ -70,6 +106,7 @@ FormResponse.init(
       type: DataTypes.TEXT,
       allowNull: true,
       field: 'notes',
+      defaultValue: null,
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -84,3 +121,21 @@ FormResponse.init(
   },
   { tableName: 'responses', freezeTableName: true, timestamps: true, sequelize }
 );
+
+FormResponse.belongsTo(Form, {
+  foreignKey: 'formId',
+  as: 'form',
+});
+
+Form.hasMany(FormResponse, {
+  foreignKey: 'formId',
+});
+
+FormResponse.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'owner',
+});
+
+User.hasMany(FormResponse, {
+  foreignKey: 'userId',
+});

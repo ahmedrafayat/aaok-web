@@ -11,13 +11,13 @@ export const TokenController = {
       const { id } = req.payload;
       if (id) {
         const existingToken = await NotificationToken.findTokenByValue(newToken);
-        // token exists and is for the same user
+        // token with save value exists and is for the same user
         if (!isNil(existingToken) && existingToken.userId === id) {
           console.log('token exists and is for the same user');
           res.sendStatus(200);
           return;
         }
-        // token exists and is for another user, then we must delete the existing token
+        // token with save value exists and is for another user, then we must delete the existing token
         if (!isNil(existingToken) && existingToken.userId !== id) {
           console.log('token exists and is for another user, then we must delete the existing token');
           await NotificationToken.deleteTokenByValue(newToken);

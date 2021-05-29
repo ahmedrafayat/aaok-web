@@ -6,10 +6,12 @@ import { FormResponse, FormResponseStatus } from '../models/FormResponse';
 import { Answer, AnswerCreationAttributes } from '../models/Answer';
 import { sequelize } from '../config/sequelize';
 import { User, UserManagementTypes } from '../models/User';
-import formResponseUtil = require('../utils/formResponseUtils');
 import { notificationService } from '../notification/NotificationService';
 import { NotificationMessage } from '../notification/NotificationMessage';
 import { AppRequest } from '../models/types/AppRequest';
+import { Form } from '../models/Form';
+import { NotificationToken } from '../models/NotificationToken';
+import formResponseUtil = require('../utils/formResponseUtils');
 
 const fetchResponseAnswersQuery = `
 SELECT
@@ -122,10 +124,7 @@ export const FormResponseController = {
 
     try {
       const result = await sequelize.transaction(async (t: Transaction) => {
-        const newResponse = await FormResponse.create(
-          { userId: userId, formId: formId },
-          { transaction: t }
-        );
+        const newResponse = await FormResponse.create({ userId: userId, formId: formId }, { transaction: t });
         const responseId = newResponse.responseId;
 
         const answersToBeSaved: AnswerCreationAttributes[] = [];
@@ -151,11 +150,7 @@ export const FormResponseController = {
       res.send(result);
     } catch (error) {
       console.log(error);
-      next(
-        new createHttpError.InternalServerError(
-          'Could not submit your response. Please contact an administrator'
-        )
-      );
+      next(new createHttpError.InternalServerError('Could not submit your response. Please contact an administrator'));
     }
   },
   getResponses: async (req: Request, res: Response, next: NextFunction) => {
@@ -234,45 +229,52 @@ export const FormResponseController = {
   },
   saveAdminFields: async (req: Request, res: Response, next: NextFunction) => {
     const responseId = req.params.responseId;
-    const { assignedTo, status, notes } = req.body;
-    // console.log('-> req.body', req.body);
+    const { notes } = req.body;
+    const newStatus = Number(req.body.status);
+    const assignedTo = Number(req.body.assignedTo);
     try {
-      const response = await FormResponse.findByPk(responseId);
-      // console.log('-> response', response);
-      if (response) {
+      const formResponse = await FormResponse.findByPk(responseId, {
+        include: [{ model: Form, as: 'form' }],
+      });
+
+      console.log('-> formResponse', formResponse);
+      if (formResponse && formResponse.form) {
         let shouldSendAdminAssignmentNotification = false;
         let shouldNotifyUserResponseInProgress = false;
-        if (
-          (response.assignedTo === null && Number(assignedTo) !== 0) ||
-          Number(response.assignedTo) !== Number(assignedTo)
-        ) {
+        if ((formResponse.isUnassigned() && assignedTo !== 0) || formResponse.assignedTo !== assignedTo) {
           shouldSendAdminAssignmentNotification = true;
         }
 
-        if (Number(status) === FormResponseStatus.IN_PROGRESS) {
+        if (
+          formResponse.hasOwner() &&
+          (newStatus === FormResponseStatus.IN_PROGRESS || newStatus === FormResponseStatus.RESOLVED)
+        ) {
           shouldNotifyUserResponseInProgress = true;
         }
 
-        response.assignedTo = Number(assignedTo) === 0 ? null : assignedTo;
-        response.status = status;
-        response.notes = notes;
-        const savedResponse = await response.save();
+        // Save admin fields
+        formResponse.assignedTo = assignedTo === 0 ? null : assignedTo;
+        formResponse.status = newStatus;
+        formResponse.notes = notes;
+        const savedResponse = await formResponse.save();
 
-        if (savedResponse && shouldNotifyUserResponseInProgress) {
+        // If notification should be sent
+        if (savedResponse && shouldNotifyUserResponseInProgress && formResponse.userId !== null) {
+          const ownerTokens = await NotificationToken.getUserTokens(formResponse.userId);
+
           const notificationMessage = new NotificationMessage(
-            'Response in progress',
-            'And here is the body!',
-            {
-              someData: 'goes here',
-            }
+            `Status update! ${FormResponse.getStatusText(formResponse.status)}`,
+            `${FormResponse.getStatusNotificationBody(formResponse.status)} "${formResponse.form.title}"`
           );
           notificationService
-            .sendPushNotification('ExponentPushToken[sOjcq2MTWxPBDiXfjh83jW]', notificationMessage)
-            .then((res) => console.log('-> res success', res))
+            .sendPushNotification(
+              ownerTokens.map((token) => token.tokenValue),
+              notificationMessage
+            )
             .catch((err) => console.error(err));
         }
 
-        res.status(200).send({ assignedTo, status, notes });
+        res.status(200).send({ assignedTo, status: newStatus, notes });
       } else {
         next(new createHttpError.BadRequest('Form Response not found'));
       }
@@ -297,9 +299,7 @@ const buildFilterQuery = (
     filters.push(`r.user_id IN (${users})`);
   }
   if (dateRange.startDate && dateRange.endDate) {
-    filters.push(
-      `r.created_at::date >= '${dateRange.startDate}' AND r.created_at::date <= '${dateRange.endDate}'`
-    );
+    filters.push(`r.created_at::date >= '${dateRange.startDate}' AND r.created_at::date <= '${dateRange.endDate}'`);
   }
   if (status && status.length > 0) {
     filters.push(`r.status IN (${status})`);

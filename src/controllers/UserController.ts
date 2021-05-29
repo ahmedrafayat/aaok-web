@@ -145,11 +145,10 @@ export const UserController = {
         if (updateUsers.length > 0) {
           user.isManagement = Number(newStatus);
         }
+        res.send({ isManagement: user.isManagement });
       } else {
         next(new createHttpError.BadRequest('User does not exist'));
       }
-
-      res.send({ isManagement: user.isManagement });
     } catch (error) {
       next(error);
     }

@@ -49,6 +49,10 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
 
   public createdAt!: string;
   public updatedAt!: string;
+
+  public getFullName() {
+    return this.firstName + ' ' + this.lastName;
+  }
 }
 
 User.init(

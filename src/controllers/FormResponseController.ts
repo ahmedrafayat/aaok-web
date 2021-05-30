@@ -14,6 +14,7 @@ import { NotificationToken } from '../models/NotificationToken';
 import { FormResponseStatus } from '../models/enums/FormResponseStatus';
 import { formResponseUtil } from '../utils/formResponseUtils';
 import { UserManagementTypes } from '../models/enums/UserManagementTypes';
+import { sendAdminAssignmentEmail } from '../config/nodemailer';
 
 const fetchResponseFormQuery = `
 SELECT
@@ -227,14 +228,14 @@ export const FormResponseController = {
     const assignedTo = Number(req.body.assignedTo);
     try {
       const formResponse = await FormResponse.findByPk(responseId, {
-        include: [{ model: Form, as: 'form' }],
+        include: [{ model: Form, as: 'form', required: true }],
       });
 
       console.log('-> formResponse', formResponse);
       if (formResponse && formResponse.form) {
         let shouldSendAdminAssignmentNotification = false;
         let shouldNotifyUserResponseInProgress = false;
-        if ((formResponse.isUnassigned() && assignedTo !== 0) || formResponse.assignedTo !== assignedTo) {
+        if (assignedTo !== 0 && (formResponse.isUnassigned() || formResponse.assignedTo !== assignedTo)) {
           shouldSendAdminAssignmentNotification = true;
         }
 
@@ -250,6 +251,16 @@ export const FormResponseController = {
         formResponse.status = newStatus;
         formResponse.notes = notes;
         const savedResponse = await formResponse.save();
+
+        if (shouldSendAdminAssignmentNotification && assignedTo > 0) {
+          const assignedAdmin = await User.findByPk(assignedTo);
+          if (assignedAdmin !== null)
+            sendAdminAssignmentEmail({
+              submissionId: formResponse.responseId,
+              name: `${assignedAdmin.getFullName()}`,
+              toEmail: assignedAdmin.email,
+            });
+        }
 
         // If notification should be sent
         if (savedResponse && shouldNotifyUserResponseInProgress && formResponse.userId !== null) {

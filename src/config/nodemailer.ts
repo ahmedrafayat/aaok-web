@@ -13,6 +13,12 @@ type SendResetPasswordEmailOptions = {
   resetToken: string;
 };
 
+type SendAdminAssignmentEmailOptions = {
+  toEmail: string;
+  name: string;
+  submissionId: number;
+};
+
 const fromEmail = process.env.NODEMAILER_EMAIL || 'admin@associatedasphalt.biz';
 const mailerUser = process.env.NODEMAILER_EMAIL;
 const mailerPass = process.env.NODEMAILER_PASS;
@@ -74,6 +80,29 @@ export const sendResetPasswordEmail = (options: SendResetPasswordEmailOptions) =
       // @ts-ignore
       context: { name: options.name, resetPasswordUrl: `${process.env.RESET_PASSWORD_BASE_URL}/${options.resetToken}` },
       template: 'password-reset-email',
+    };
+
+    transporter.sendMail(mailOptions, (err) => {
+      if (err) {
+        console.error('Error occurred while sending email', err);
+        reject(false);
+      } else {
+        console.log('Email sent successfully!!');
+        resolve(true);
+      }
+    });
+  });
+};
+
+export const sendAdminAssignmentEmail = (options: SendAdminAssignmentEmailOptions) => {
+  return new Promise((resolve, reject) => {
+    const mailOptions: SendMailOptions = {
+      from: `"AAOK" <${fromEmail}>`,
+      to: options.toEmail,
+      subject: 'AAOK: You have been assigned to a submission',
+      // @ts-ignore
+      context: { name: options.name, submissionLink: `${process.env.CLIENT_URL}/submissions/${options.submissionId}` },
+      template: 'admin-assignment-alert-email',
     };
 
     transporter.sendMail(mailOptions, (err) => {

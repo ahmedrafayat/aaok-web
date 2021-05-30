@@ -73,7 +73,7 @@ export const sendResetPasswordEmail = (options: SendResetPasswordEmailOptions) =
       subject: 'AAOK: Reset Password',
       // @ts-ignore
       context: { name: options.name, resetPasswordUrl: `${process.env.RESET_PASSWORD_BASE_URL}/${options.resetToken}` },
-      template: 'password-reset-email.hbs',
+      template: 'password-reset-email',
     };
 
     transporter.sendMail(mailOptions, (err) => {

@@ -15,21 +15,6 @@ import { FormResponseStatus } from '../models/enums/FormResponseStatus';
 import { formResponseUtil } from '../utils/formResponseUtils';
 import { UserManagementTypes } from '../models/enums/UserManagementTypes';
 
-const fetchResponseAnswersQuery = `
-SELECT
-    f."label" "label",
-    a.value,
-    f.json_config "jsonConfig"
-FROM
-    responses r,
-    answers a,
-    fields f
-WHERE
-    r.response_id = :responseId
-    AND r.response_id = a.response_id
-    AND f.field_id = a.field_id
-`;
-
 const fetchResponseFormQuery = `
 SELECT
     f.title,
@@ -37,6 +22,7 @@ SELECT
     u.email,
     COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "submitter",
     COALESCE(u2.first_name || ' ' || u2.last_name, null) "assignedTo",
+    r.assigned_to "assignedToId",
     r.status status,
     r.notes notes
 FROM
@@ -183,9 +169,14 @@ export const FormResponseController = {
     try {
       const responseId = req.params.responseId;
 
-      const answers = await sequelize.query(fetchResponseAnswersQuery, {
-        replacements: { responseId: responseId },
-        type: QueryTypes.SELECT,
+      const answers = await Answer.findAll({
+        where: {
+          responseId: {
+            [Op.eq]: responseId,
+          },
+        },
+        include: [{ model: Field, as: 'field', required: true, attributes: ['label'] }],
+        attributes: ['value'],
       });
 
       const formData = await sequelize.query(fetchResponseFormQuery, {
@@ -205,7 +196,7 @@ export const FormResponseController = {
       res.send({
         ...formData[0],
         adminUsers,
-        answers: answers,
+        answers: answers.map((answer) => ({ value: answer.value, label: answer.field?.label })),
       });
     } catch (error) {
       next(error);

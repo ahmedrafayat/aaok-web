@@ -2,6 +2,8 @@ import { DataTypes, Model, Optional } from 'sequelize';
 
 import { FieldType } from './enums/FieldType';
 import { sequelize } from '../config/sequelize';
+import { FormResponse } from './FormResponse';
+import { Field } from './Field';
 
 interface ValueType {
   type: FieldType;
@@ -37,6 +39,8 @@ export class Answer extends Model<AnswerAttributes, AnswerCreationAttributes> im
   public value!: LocationValue | GenericValue | CheckValue;
   public createdAt!: string;
   public updatedAt!: string;
+
+  public readonly field?: Field;
 }
 
 Answer.init(
@@ -74,3 +78,22 @@ Answer.init(
   },
   { tableName: 'answers', freezeTableName: true, timestamps: true, sequelize }
 );
+
+Answer.belongsTo(FormResponse, {
+  foreignKey: 'responseId',
+  as: 'response',
+});
+
+FormResponse.hasMany(Answer, {
+  foreignKey: 'responseId',
+  as: 'answers',
+});
+
+Answer.belongsTo(Field, {
+  as: 'field',
+  foreignKey: 'fieldId',
+});
+Field.hasMany(Answer, {
+  foreignKey: 'fieldId',
+  as: 'answers',
+});

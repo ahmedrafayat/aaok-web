@@ -13,12 +13,11 @@ export const AuthController = {
     try {
       const { email, password, firstName, lastName } = req.body;
       if (!email || !password || !firstName || !lastName) {
-        next(new createError.BadRequest('Please enter all fields'));
-        return;
+        return next(new createError.BadRequest('Please enter all fields'));
       }
 
       if (typeof password !== 'string' || password.length < 8) {
-        next(new createError.BadRequest('Password must be have at least 8 characters'));
+        return next(new createError.BadRequest('Password must be have at least 8 characters'));
       }
 
       // fetch user by email
@@ -59,7 +58,7 @@ export const AuthController = {
           res.send({ accessToken, refreshToken });
         }
       } else if (userExists !== null && (userExists.isRegistered || userExists.password)) {
-        next(new createError.Conflict('A user with this email already exists'));
+        return next(new createError.Conflict('A user with this email already exists'));
       }
       // when not exists, register and make disabled
       else {
@@ -92,7 +91,7 @@ export const AuthController = {
       const { email, password } = req.body;
 
       if (!email || !password) {
-        next(new createError.BadRequest('Invalid Username/Password'));
+        return next(new createError.BadRequest('Invalid Username/Password'));
       }
 
       const user = await User.findOne({
@@ -104,19 +103,16 @@ export const AuthController = {
       });
 
       if (user === null) {
-        next(new createError.NotFound('User Not Registered'));
-        return;
+        return next(new createError.NotFound('User Not Registered'));
       }
 
       if (!user.isEnabled) {
-        next(new createError.Unauthorized('User is not enabled. Please contact an administrator'));
-        return;
+        return next(new createError.Unauthorized('User is not enabled. Please contact an administrator'));
       }
 
       const isMatch = await JwtUtils.isValidPassword(password, user.password);
       if (!isMatch) {
-        next(new createError.Unauthorized('Invalid username/password'));
-        return;
+        return next(new createError.Unauthorized('Invalid username/password'));
       }
 
       const tokenPayload = {
@@ -130,8 +126,7 @@ export const AuthController = {
       if (accessToken && refreshToken) {
         res.send({ accessToken, refreshToken });
       } else {
-        next(new createError.InternalServerError());
-        return;
+        return next(new createError.InternalServerError());
       }
     } catch (error) {
       next(error);
@@ -142,8 +137,7 @@ export const AuthController = {
     try {
       const { refreshToken } = req.body;
       if (!refreshToken) {
-        next(new createError.BadRequest());
-        return;
+        return next(new createError.BadRequest());
       }
       const tokenPayload = await JwtUtils.verifyRefreshToken(refreshToken);
 
@@ -153,8 +147,7 @@ export const AuthController = {
       if (accessToken && refToken) {
         res.send({ accessToken, refreshToken: refToken });
       } else {
-        next(new createError.InternalServerError());
-        return;
+        return next(new createError.InternalServerError());
       }
     } catch (error) {
       next(error);
@@ -165,8 +158,7 @@ export const AuthController = {
     try {
       const { refreshToken } = req.body;
       if (!refreshToken) {
-        next(new createError.BadRequest());
-        return;
+        return next(new createError.BadRequest());
       }
       const userData = await JwtUtils.verifyRefreshToken(refreshToken);
 
@@ -187,8 +179,7 @@ export const AuthController = {
       const { email, password } = req.body;
 
       if (!email || !password) {
-        next(new createError.BadRequest('Invalid Username/Password'));
-        return;
+        return next(new createError.BadRequest('Invalid Username/Password'));
       }
 
       const user = await User.findOne({
@@ -200,18 +191,16 @@ export const AuthController = {
       });
 
       if (user === null) {
-        next(new createError.NotFound('User Not Registered'));
-        return;
+        return next(new createError.NotFound('User Not Registered'));
       }
 
       if (user.isManagement === UserManagementTypes.NORMAL_USER) {
-        next(new createError.Unauthorized('You are not allowed to access this site'));
-        return;
+        return next(new createError.Unauthorized('You are not allowed to access this site'));
       }
 
       const isMatch = await isValidPassword(password, user.password);
       if (!isMatch) {
-        next(new createError.Unauthorized('Invalid username/password'));
+        return next(new createError.Unauthorized('Invalid username/password'));
       }
 
       const tokenPayload = {
@@ -225,8 +214,7 @@ export const AuthController = {
       if (accessToken && refreshToken) {
         res.send({ accessToken, refreshToken });
       } else {
-        next(new createError.InternalServerError());
-        return;
+        return next(new createError.InternalServerError());
       }
     } catch (error) {
       next(error);
@@ -271,20 +259,18 @@ export const AuthController = {
       if (decodedToken && typeof decodedToken !== 'string' && decodedToken['id']) {
         user = await User.findByPk(decodedToken.id);
         if (!user || user.resetToken !== token) {
-          next(
+          return next(
             new createError.Unauthorized(
               'The password reset link is invalid or expired, please try again with a new link'
             )
           );
-          return;
         }
       } else {
-        next(
+        return next(
           new createError.Unauthorized(
             'The password reset link is invalid or expired, please try again with a new link'
           )
         );
-        return;
       }
 
       if (password && token && user) {
@@ -295,17 +281,14 @@ export const AuthController = {
           await user.save();
           res.send({ isManagement: user.isManagement });
         } else {
-          next(new createError.Unauthorized('Invalid token'));
-          return;
+          return next(new createError.Unauthorized('Invalid token'));
         }
       } else {
-        next(new createError.BadRequest());
-        return;
+        return next(new createError.BadRequest());
       }
     } catch (e) {
       if (e.name === 'TokenExpiredError') {
-        next(new createError.Unauthorized('Token has expired'));
-        return;
+        return next(new createError.Unauthorized('Token has expired'));
       }
       next(e);
     }

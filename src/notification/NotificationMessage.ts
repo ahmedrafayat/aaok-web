@@ -14,4 +14,8 @@ export class NotificationMessage {
           volume?: number;
         } = NotificationMessage.DEFAULT_NOTIFICATION_SOUND
   ) {}
+
+  getX() {
+    return this.body;
+  }
 }

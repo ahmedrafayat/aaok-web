@@ -2,6 +2,7 @@ import nodemailer, { SendMailOptions } from 'nodemailer';
 import nodemailerHandlebars from 'nodemailer-express-handlebars';
 import path from 'path';
 import { User } from '../models/User';
+import { ServiceLinks } from '../utils/ServiceLinks';
 
 type SendEnabledEmailOptions = {
   toEmail: string;
@@ -40,11 +41,11 @@ transporter.use(
   nodemailerHandlebars({
     viewEngine: {
       extname: '.hbs',
-      partialsDir: path.join(__dirname, '../views/'),
-      layoutsDir: path.join(__dirname, '../views/'),
+      partialsDir: path.join(__dirname, '../views/email-handlebars/'),
+      layoutsDir: path.join(__dirname, '../views/email-handlebars/'),
       defaultLayout: '',
     },
-    viewPath: path.join(__dirname, '../views/'),
+    viewPath: path.join(__dirname, '../views/email-handlebars/'),
     extName: '.hbs',
   })
 );
@@ -54,7 +55,7 @@ export const sendEnabledEmail = (options: SendEnabledEmailOptions): Promise<bool
     const mailOptions: SendMailOptions = {
       from: `"AAOK" <${fromEmail}>`,
       to: options.toEmail,
-      subject: 'AAOK: Your account has been activated!',
+      subject: 'You’re all set to go with our new AA OK App!!',
       // @ts-ignore
       context: { name: options.name },
       template: 'user-enabled-email',
@@ -77,10 +78,10 @@ export const sendResetPasswordEmail = (options: SendResetPasswordEmailOptions) =
     const mailOptions: SendMailOptions = {
       from: `"AAOK" <${fromEmail}>`,
       to: options.toEmail,
-      subject: 'AAOK: Reset Password',
+      subject: 'Reset your AA OK password',
       // @ts-ignore
-      context: { name: options.name, resetPasswordUrl: `${process.env.RESET_PASSWORD_BASE_URL}/${options.resetToken}` },
-      template: 'password-reset-email',
+      context: { name: options.name, resetPasswordUrl: ServiceLinks.getPasswordResetLink(options.resetToken) },
+      template: 'reset-password-email',
     };
 
     transporter.sendMail(mailOptions, (err) => {
@@ -102,7 +103,10 @@ export const sendAdminAssignmentEmail = (options: SendAdminAssignmentEmailOption
       to: options.toEmail,
       subject: 'AAOK: You have been assigned to a submission',
       // @ts-ignore
-      context: { name: options.name, submissionLink: `${process.env.CLIENT_URL}/submissions/${options.submissionId}` },
+      context: {
+        name: options.name,
+        submissionLink: ServiceLinks.getSubmissionDetailsUrl(options.submissionId),
+      },
       template: 'admin-assignment-alert-email',
     };
 
@@ -129,7 +133,7 @@ export const sendEmailToAllManagersForNewSubmission = (submissionId: number, adm
       subject: 'AAOK: New Submission',
       bcc: admins.map((admin) => admin.email),
       // @ts-ignore
-      context: { submissionLink: `${process.env.CLIENT_URL}/submissions/${submissionId}` },
+      context: { submissionLink: ServiceLinks.getSubmissionDetailsUrl(submissionId) },
       template: 'new-submission-alert-admin',
     };
 

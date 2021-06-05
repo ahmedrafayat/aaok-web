@@ -25,6 +25,15 @@ type SendAdminAssignmentEmailOptions = {
   submissionDate: string;
 };
 
+type SendEmailToManagersForNewSubmissionOptions = {
+  admins: User[];
+  submissionId: number;
+  formTitle: string;
+  formDescription: string;
+  submitter: User | null;
+  submissionDate: string;
+};
+
 const fromEmail = process.env.NODEMAILER_EMAIL || 'admin@associatedasphalt.biz';
 const mailerUser = process.env.NODEMAILER_EMAIL;
 const mailerPass = process.env.NODEMAILER_PASS;
@@ -130,18 +139,24 @@ export const sendAdminAssignmentEmail = (options: SendAdminAssignmentEmailOption
   });
 };
 
-export const sendEmailToAllManagersForNewSubmission = (submissionId: number, admins: User[]) => {
+export const sendEmailToManagersForNewSubmission = (options: SendEmailToManagersForNewSubmissionOptions) => {
   new Promise(async (resolve, reject) => {
-    const adminEmails = admins.map((admin) => admin.email);
+    const adminEmails = options.admins.map((admin) => admin.email);
     console.log('Sending emails to the following emails', adminEmails.join());
 
     const mailOptions: SendMailOptions = {
       from: `"AAOK" <${fromEmail}>`,
       to: process.env.SUPER_USER_EMAIL || 'aaokapp@gmail.com',
       subject: 'AAOK: New Submission',
-      bcc: admins.map((admin) => admin.email),
+      bcc: adminEmails,
       // @ts-ignore
-      context: { submissionLink: ServiceLinks.getSubmissionDetailsUrl(submissionId) },
+      context: {
+        formTitle: options.formTitle,
+        formDescription: options.formDescription,
+        user: options.submitter,
+        date: options.submissionDate,
+        submissionLink: ServiceLinks.getSubmissionDetailsUrl(options.submissionId),
+      },
       template: 'new-submission-alert-admin',
     };
 

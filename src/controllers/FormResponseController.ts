@@ -15,7 +15,7 @@ import { NotificationToken } from '../models/NotificationToken';
 import { FormResponseStatus } from '../models/enums/FormResponseStatus';
 import { formResponseUtil } from '../utils/formResponseUtils';
 import { UserManagementTypes } from '../models/enums/UserManagementTypes';
-import { sendAdminAssignmentEmail, sendEmailToAllManagersForNewSubmission } from '../config/nodemailer';
+import { sendAdminAssignmentEmail, sendEmailToManagersForNewSubmission } from '../config/nodemailer';
 
 const fetchResponseFormQuery = `
 SELECT
@@ -151,11 +151,19 @@ export const FormResponseController = {
         } catch (e) {
           console.error(e);
         }
-        sendEmailToAllManagersForNewSubmission(newResponse.responseId, admins);
-        const ownerTokens = await NotificationToken.findAll({ where: { userId: admins.map((admin) => admin.userId) } });
         const form = await Form.findByPk(newResponse.formId);
         const user = newResponse.userId !== null ? await User.findByPk(newResponse.userId) : null;
+        const ownerTokens = await NotificationToken.findAll({ where: { userId: admins.map((admin) => admin.userId) } });
         if (form !== null) {
+          sendEmailToManagersForNewSubmission({
+            submissionId: newResponse.responseId,
+            admins,
+            submitter: user,
+            formTitle: form.title,
+            formDescription: form.description,
+            submissionDate: format(newResponse.createdAt, 'do LLL yyyy HH:mm'),
+          });
+
           const notificationMessage = new NotificationMessage(
             'New Submission!',
             `There was a new submission to the form "${form.title}" by ${

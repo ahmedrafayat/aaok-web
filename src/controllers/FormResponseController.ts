@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { col, fn, Op, QueryTypes, Transaction } from 'sequelize';
+import { col, fn, QueryTypes, Transaction } from 'sequelize';
 import createHttpError from 'http-errors';
 import { Field } from '../models/Field';
 import { FormResponse } from '../models/FormResponse';
@@ -14,7 +14,7 @@ import { NotificationToken } from '../models/NotificationToken';
 import { FormResponseStatus } from '../models/enums/FormResponseStatus';
 import { formResponseUtil } from '../utils/formResponseUtils';
 import { UserManagementTypes } from '../models/enums/UserManagementTypes';
-import { sendAdminAssignmentEmail } from '../config/nodemailer';
+import { sendAdminAssignmentEmail, sendEmailToAllManagersForNewSubmission } from '../config/nodemailer';
 
 const fetchResponseFormQuery = `
 SELECT
@@ -111,6 +111,7 @@ export const FormResponseController = {
       },
     });
 
+    let newSubmissionId: number | null = null;
     try {
       const result = await sequelize.transaction(async (t: Transaction) => {
         const newResponse = await FormResponse.create({ userId: userId, formId: formId }, { transaction: t });
@@ -130,11 +131,16 @@ export const FormResponseController = {
             answersToBeSaved.push(answer);
           }
         }
+        newSubmissionId = responseId;
 
         return await Answer.bulkCreate(answersToBeSaved, {
           validate: true,
         });
       });
+
+      if (result.length > 0 && newSubmissionId !== null) {
+        sendEmailToAllManagersForNewSubmission(newSubmissionId);
+      }
 
       res.send(result);
     } catch (error) {
@@ -172,9 +178,7 @@ export const FormResponseController = {
 
       const answers = await Answer.findAll({
         where: {
-          responseId: {
-            [Op.eq]: responseId,
-          },
+          responseId: responseId,
         },
         include: [{ model: Field, as: 'field', required: true, attributes: ['label'] }],
         attributes: ['value'],
@@ -187,9 +191,7 @@ export const FormResponseController = {
 
       const adminUsers = await User.findAll({
         where: {
-          isManagement: {
-            [Op.gt]: UserManagementTypes.NORMAL_USER,
-          },
+          isManagement: UserManagementTypes.NORMAL_USER,
         },
         attributes: ['user_id', [fn('CONCAT', col('first_name'), ' ', col('last_name')), 'name']],
       });
@@ -231,7 +233,6 @@ export const FormResponseController = {
         include: [{ model: Form, as: 'form', required: true }],
       });
 
-      console.log('-> formResponse', formResponse);
       if (formResponse && formResponse.form) {
         let shouldSendAdminAssignmentNotification = false;
         let shouldNotifyUserResponseInProgress = false;
@@ -255,7 +256,7 @@ export const FormResponseController = {
         if (shouldSendAdminAssignmentNotification && assignedTo > 0) {
           const assignedAdmin = await User.findByPk(assignedTo);
           if (assignedAdmin !== null)
-            sendAdminAssignmentEmail({
+            await sendAdminAssignmentEmail({
               submissionId: formResponse.responseId,
               name: `${assignedAdmin.getFullName()}`,
               toEmail: assignedAdmin.email,

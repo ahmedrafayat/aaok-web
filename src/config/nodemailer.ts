@@ -1,6 +1,8 @@
 import nodemailer, { SendMailOptions } from 'nodemailer';
 import nodemailerHandlebars from 'nodemailer-express-handlebars';
 import path from 'path';
+import { User } from '../models/User';
+import { UserManagementTypes } from '../models/enums/UserManagementTypes';
 
 type SendEnabledEmailOptions = {
   toEmail: string;
@@ -103,6 +105,46 @@ export const sendAdminAssignmentEmail = (options: SendAdminAssignmentEmailOption
       // @ts-ignore
       context: { name: options.name, submissionLink: `${process.env.CLIENT_URL}/submissions/${options.submissionId}` },
       template: 'admin-assignment-alert-email',
+    };
+
+    transporter.sendMail(mailOptions, (err) => {
+      if (err) {
+        console.error('Error occurred while sending email', err);
+        reject(false);
+      } else {
+        console.log('Email sent successfully!!');
+        resolve(true);
+      }
+    });
+  });
+};
+
+export const sendEmailToAllManagersForNewSubmission = (submissionId: number) => {
+  return new Promise(async (resolve, reject) => {
+    let admins: User[] = [];
+    try {
+      admins = await User.findAll({
+        where: {
+          isManagement: UserManagementTypes.ADMIN,
+          isEnabled: 1,
+        },
+        attributes: ['email'],
+      });
+    } catch (e) {
+      console.error(e);
+    }
+
+    const adminEmails = admins.map((admin) => admin.email);
+    console.log('Sending emails to the following emails', adminEmails.join());
+
+    const mailOptions: SendMailOptions = {
+      from: `"AAOK" <${fromEmail}>`,
+      to: process.env.SUPER_USE_EMAIL || 'aaokapp@gmail.com',
+      subject: 'AAOK: New Submission',
+      bcc: admins.map((admin) => admin.email),
+      // @ts-ignore
+      context: { submissionLink: `${process.env.CLIENT_URL}/submissions/${submissionId}` },
+      template: 'new-submission-alert-admin',
     };
 
     transporter.sendMail(mailOptions, (err) => {

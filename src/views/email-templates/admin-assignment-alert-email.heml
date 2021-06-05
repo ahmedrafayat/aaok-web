@@ -1,7 +1,7 @@
 <heml>
   <head>
-    <subject>A New {{formTitle}} submission has been assigned to you</subject>
-    <preview>A New {{formTitle}} submission has been assigned to you</preview>
+    <subject>A New '{{formTitle}}' submission has been assigned to you</subject>
+    <preview>A New '{{formTitle}}' submission has been assigned to you</preview>
   </head>
   <style>
     body {

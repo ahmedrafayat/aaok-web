@@ -114,7 +114,7 @@ export const sendAdminAssignmentEmail = (options: SendAdminAssignmentEmailOption
     const mailOptions: SendMailOptions = {
       from: `"AAOK" <${fromEmail}>`,
       to: options.adminEmail,
-      subject: 'AAOK: You have been assigned to a submission',
+      subject: `A New '${options.formTitle}' submission has been assigned to you`,
       // @ts-ignore
       context: {
         adminName: options.adminName,
@@ -144,13 +144,18 @@ export const sendEmailToManagersForNewSubmission = (options: SendEmailToManagers
     const adminEmails = options.admins.map((admin) => admin.email);
     console.log('Sending emails to the following emails', adminEmails.join());
 
+    const emailSubject = `New '${options.formTitle}' submission from ${
+      options.submitter ? options.submitter.getFullName() : 'an Anonymous User'
+    }`;
+
     const mailOptions: SendMailOptions = {
       from: `"AAOK" <${fromEmail}>`,
       to: process.env.SUPER_USER_EMAIL || 'aaokapp@gmail.com',
-      subject: 'AAOK: New Submission',
+      subject: emailSubject,
       bcc: adminEmails,
       // @ts-ignore
       context: {
+        emailSubject: emailSubject,
         formTitle: options.formTitle,
         formDescription: options.formDescription,
         user: options.submitter,

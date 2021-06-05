@@ -8,7 +8,7 @@ class NotificationService {
     this.expoInstance = new Expo();
   }
 
-  async sendPushNotification(pushTokens: string[], message: NotificationMessage) {
+  async sendPushNotification(pushTokens: string[], message: NotificationMessage, onError?: () => void) {
     const notifications: ExpoPushMessage[] = [];
     pushTokens.forEach((token) => {
       if (!Expo.isExpoPushToken(token)) {
@@ -43,6 +43,10 @@ class NotificationService {
         }
       }
     })();
+
+    if (tickets.some((ticket) => ticket.status === 'error') && onError) {
+      onError();
+    }
   }
 }
 

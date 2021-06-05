@@ -38,7 +38,7 @@ type SendAssignmentEmailToUserOptions = {
   formTitle: string;
   formDescription: string;
   status: string;
-  user: User;
+  user: User | undefined;
   assignedAdmin: User;
   submissionDate: string;
 };
@@ -154,7 +154,7 @@ export const sendAssignmentEmailToUser = (options: SendAssignmentEmailToUserOpti
 
     const mailOptions: SendMailOptions = {
       from: `"AAOK" <${fromEmail}>`,
-      to: options.user.email,
+      to: options.user?.email,
       subject: emailSubject,
       // @ts-ignore
       context: {

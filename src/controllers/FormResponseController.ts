@@ -15,7 +15,11 @@ import { NotificationToken } from '../models/NotificationToken';
 import { FormResponseStatus } from '../models/enums/FormResponseStatus';
 import { formResponseUtil } from '../utils/formResponseUtils';
 import { UserManagementTypes } from '../models/enums/UserManagementTypes';
-import { sendAdminAssignmentEmailToAdmin, sendEmailToManagersForNewSubmission } from '../config/nodemailer';
+import {
+  sendAdminAssignmentEmailToAdmin,
+  sendAssignmentEmailToUser,
+  sendEmailToManagersForNewSubmission,
+} from '../config/nodemailer';
 
 const fetchResponseFormQuery = `
 SELECT
@@ -309,19 +313,37 @@ export const FormResponseController = {
         }
 
         // If notification should be sent
-        if (savedResponse && shouldNotifyUserResponseInProgress && formResponse.userId !== null) {
+        if (
+          savedResponse &&
+          shouldNotifyUserResponseInProgress &&
+          formResponse.userId !== null &&
+          formResponse.owner &&
+          savedResponse.assignedTo !== null
+        ) {
+          const assignedAdmin = await User.findByPk(savedResponse.assignedTo);
           const ownerTokens = await NotificationToken.getUserTokens(formResponse.userId);
 
-          const notificationMessage = new NotificationMessage(
-            `Status update! ${FormResponse.getStatusText(formResponse.status)}`,
-            `${FormResponse.getStatusNotificationBody(formResponse.status)} "${formResponse.form.title}"`
-          );
-          notificationService
-            .sendPushNotification(
-              ownerTokens.map((token) => token.tokenValue),
-              notificationMessage
-            )
-            .catch((err) => console.error(err));
+          if (assignedAdmin !== null) {
+            const notificationMessage = new NotificationMessage(
+              `Status update! ${FormResponse.getStatusText(formResponse.status)}`,
+              `${FormResponse.getStatusNotificationBody(formResponse.status)} "${formResponse.form.title}"`
+            );
+            notificationService
+              .sendPushNotification(
+                ownerTokens.map((token) => token.tokenValue),
+                notificationMessage,
+                () =>
+                  sendAssignmentEmailToUser({
+                    assignedAdmin,
+                    user: formResponse.owner,
+                    formTitle: formResponse.form?.title || '',
+                    formDescription: formResponse.form?.description || '',
+                    submissionDate: format(formResponse.createdAt, 'do LLL yyyy HH:mm'),
+                    status: FormResponse.getStatusText(savedResponse.status),
+                  })
+              )
+              .catch((err) => console.error(err));
+          }
         }
 
         res.status(200).send({ assignedTo, status: newStatus, notes });

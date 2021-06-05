@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { col, fn, QueryTypes, Transaction } from 'sequelize';
+import format from 'date-fns/format';
 import createHttpError from 'http-errors';
 import { Field } from '../models/Field';
 import { FormResponse } from '../models/FormResponse';
@@ -258,7 +259,10 @@ export const FormResponseController = {
     const assignedTo = Number(req.body.assignedTo);
     try {
       const formResponse = await FormResponse.findByPk(responseId, {
-        include: [{ model: Form, as: 'form', required: true }],
+        include: [
+          { model: Form, as: 'form', required: true },
+          { model: User, as: 'owner' },
+        ],
       });
 
       if (formResponse && formResponse.form) {
@@ -286,8 +290,12 @@ export const FormResponseController = {
           if (assignedAdmin !== null)
             await sendAdminAssignmentEmail({
               submissionId: formResponse.responseId,
-              name: `${assignedAdmin.getFullName()}`,
-              toEmail: assignedAdmin.email,
+              adminName: assignedAdmin.getFullName(),
+              adminEmail: assignedAdmin.email,
+              formTitle: formResponse.form.title,
+              formDescription: formResponse.form.description,
+              submissionDate: format(formResponse.createdAt, 'do LLL yyyy HH:mm'),
+              user: formResponse.owner || null,
             });
         }
 

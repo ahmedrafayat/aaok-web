@@ -27,7 +27,7 @@
           <br>
           <small>{{date}}</small>
           </p>
-          <p><a href="https://{{submissionLink}}">Click here to view and manage the submission in full</a></p>
+          <p><a href="{{submissionLink}}">Click here to view and manage the submission in full</a></p>
           <p>This submission should be moved to IN PROGRESS and notes updated on each step of the resolution until resolved.</p>
         </block>
         <br>

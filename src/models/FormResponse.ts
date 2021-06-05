@@ -35,6 +35,7 @@ export class FormResponse
 
   // This only exists with eager loading the model
   public form?: Form;
+  public owner?: User;
 
   public hasOwner() {
     return this.userId !== null;

@@ -115,15 +115,20 @@
                   <tr class="block__row">
                     <td class="block__cell" width="100%" align="left" valign="top">
                       <h2 class="header h2"
-                          style="margin: 20px 0; line-height: 30px; font-family: Helvetica,Arial,sans-serif; color: #FFFFFF;">{{name}}
+                          style="margin: 20px 0; line-height: 30px; font-family: Helvetica,Arial,sans-serif; color: #FFFFFF;">{{adminName}}
                         , A new {{formTitle}} submission has been assigned to you.</h2>
                       <p class="text p"
                          style="display: block; margin: 14px 0; font-family: Helvetica,Arial,sans-serif; font-size: 16px; line-height: 20px; color: #FFFFFF;">
-                        <small>{{formDescription}}</small> <br /> <small>{{userEmail}}</small> <br />
+                        <small>{{formDescription}}</small>
+                        {{#if user}}
+                          <br />
+                          <small>{{user.email}}</small>
+                        {{/if}}
+                        <br />
                         <small>{{date}}</small></p>
                       <p class="text p"
                          style="display: block; margin: 14px 0; font-family: Helvetica,Arial,sans-serif; font-size: 16px; line-height: 20px; color: #FFFFFF;">
-                        <a href="https://{{submissionLink}}" class="a"><span class="a__text">Click here to view and manage the submission in full</span></a>
+                        <a href="{{submissionLink}}" class="a"><span class="a__text">Click here to view and manage the submission in full</span></a>
                       </p>
                       <p class="text p"
                          style="display: block; margin: 14px 0; font-family: Helvetica,Arial,sans-serif; font-size: 16px; line-height: 20px; color: #FFFFFF;">

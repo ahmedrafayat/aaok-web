@@ -16,9 +16,13 @@ type SendResetPasswordEmailOptions = {
 };
 
 type SendAdminAssignmentEmailOptions = {
-  toEmail: string;
-  name: string;
+  adminEmail: string;
+  adminName: string;
   submissionId: number;
+  formTitle: string;
+  formDescription: string;
+  user: User | null;
+  submissionDate: string;
 };
 
 const fromEmail = process.env.NODEMAILER_EMAIL || 'admin@associatedasphalt.biz';
@@ -100,12 +104,16 @@ export const sendAdminAssignmentEmail = (options: SendAdminAssignmentEmailOption
   return new Promise((resolve, reject) => {
     const mailOptions: SendMailOptions = {
       from: `"AAOK" <${fromEmail}>`,
-      to: options.toEmail,
+      to: options.adminEmail,
       subject: 'AAOK: You have been assigned to a submission',
       // @ts-ignore
       context: {
-        name: options.name,
+        adminName: options.adminName,
         submissionLink: ServiceLinks.getSubmissionDetailsUrl(options.submissionId),
+        formTitle: options.formTitle,
+        formDescription: options.formDescription,
+        date: options.submissionDate,
+        user: options.user,
       },
       template: 'admin-assignment-alert-email',
     };

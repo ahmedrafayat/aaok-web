@@ -1,0 +1,39 @@
+<heml>
+  <head>
+    <subject>A New {{formTitle}} submission has been assigned to you</subject>
+    <preview>A New {{formTitle}} submission has been assigned to you</preview>
+  </head>
+  <style>
+    body {
+      color: white;
+    }
+    container {
+      background: #2D2D2D;
+      padding: 50px;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+  <body>
+      <container>
+        <block>
+          <h2>{{name}}, A new {{formTitle}} submission has been assigned to you.</h2>
+          <p>
+          <small>{{formDescription}}</small>
+          <br>
+          <small>{{userEmail}}</small>
+          <br>
+          <small>{{date}}</small>
+          </p>
+          <p><a href="https://{{submissionLink}}">Click here to view and manage the submission in full</a></p>
+          <p>This submission should be moved to IN PROGRESS and notes updated on each step of the resolution until resolved.</p>
+        </block>
+        <br>
+        <block>
+          AAOK Team
+        </block>
+      </container>
+  </body>
+</heml>

@@ -1,0 +1,38 @@
+<heml>
+  <head>
+    <subject>Your "{{formTitle}}" submission is {{status}}</subject>
+    <preview>Your "{{formTitle}}" submission is {{status}}</preview>
+  </head>
+  <style>
+    body {
+      color: white;
+    }
+    container {
+      background: #2D2D2D;
+      padding: 50px;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+  <body>
+      <container>
+        <block>
+          <h2>{{name}} your "{{formTitle}}" submission is {{status}} with {{assignedTo}}</h2>
+          <p>
+          <small>{{formDescription}}</small>
+          <br>
+          <small>{{userEmail}}</small>
+          <br>
+          <small>{{date}}</small>
+          </p>
+          <p>Thank you for your submission.</p>
+        </block>
+        <br>
+        <block>
+          AAOK Team
+        </block>
+      </container>
+  </body>
+</heml>

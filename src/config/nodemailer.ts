@@ -2,7 +2,6 @@ import nodemailer, { SendMailOptions } from 'nodemailer';
 import nodemailerHandlebars from 'nodemailer-express-handlebars';
 import path from 'path';
 import { User } from '../models/User';
-import { UserManagementTypes } from '../models/enums/UserManagementTypes';
 
 type SendEnabledEmailOptions = {
   toEmail: string;
@@ -119,27 +118,14 @@ export const sendAdminAssignmentEmail = (options: SendAdminAssignmentEmailOption
   });
 };
 
-export const sendEmailToAllManagersForNewSubmission = (submissionId: number) => {
-  return new Promise(async (resolve, reject) => {
-    let admins: User[] = [];
-    try {
-      admins = await User.findAll({
-        where: {
-          isManagement: UserManagementTypes.ADMIN,
-          isEnabled: 1,
-        },
-        attributes: ['email'],
-      });
-    } catch (e) {
-      console.error(e);
-    }
-
+export const sendEmailToAllManagersForNewSubmission = (submissionId: number, admins: User[]) => {
+  new Promise(async (resolve, reject) => {
     const adminEmails = admins.map((admin) => admin.email);
     console.log('Sending emails to the following emails', adminEmails.join());
 
     const mailOptions: SendMailOptions = {
       from: `"AAOK" <${fromEmail}>`,
-      to: process.env.SUPER_USE_EMAIL || 'aaokapp@gmail.com',
+      to: process.env.SUPER_USER_EMAIL || 'aaokapp@gmail.com',
       subject: 'AAOK: New Submission',
       bcc: admins.map((admin) => admin.email),
       // @ts-ignore
@@ -156,5 +142,5 @@ export const sendEmailToAllManagersForNewSubmission = (submissionId: number) => 
         resolve(true);
       }
     });
-  });
+  }).then();
 };

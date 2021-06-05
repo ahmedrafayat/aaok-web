@@ -111,9 +111,8 @@ export const FormResponseController = {
       },
     });
 
-    let newSubmissionId: number | null = null;
     try {
-      const result = await sequelize.transaction(async (t: Transaction) => {
+      const { answers, newResponse } = await sequelize.transaction(async (t: Transaction) => {
         const newResponse = await FormResponse.create({ userId: userId, formId: formId }, { transaction: t });
         const responseId = newResponse.responseId;
 
@@ -131,18 +130,47 @@ export const FormResponseController = {
             answersToBeSaved.push(answer);
           }
         }
-        newSubmissionId = responseId;
 
-        return await Answer.bulkCreate(answersToBeSaved, {
+        const answers = await Answer.bulkCreate(answersToBeSaved, {
           validate: true,
         });
+        return { answers, newResponse };
       });
 
-      if (result.length > 0 && newSubmissionId !== null) {
-        sendEmailToAllManagersForNewSubmission(newSubmissionId);
+      if (answers.length > 0 && newResponse) {
+        let admins: User[] = [];
+        try {
+          admins = await User.findAll({
+            where: {
+              isManagement: UserManagementTypes.ADMIN,
+              isEnabled: 1,
+            },
+            attributes: ['email'],
+          });
+        } catch (e) {
+          console.error(e);
+        }
+        sendEmailToAllManagersForNewSubmission(newResponse.responseId, admins);
+        const ownerTokens = await NotificationToken.findAll({ where: { userId: admins.map((admin) => admin.userId) } });
+        const form = await Form.findByPk(newResponse.formId);
+        const user = newResponse.userId !== null ? await User.findByPk(newResponse.userId) : null;
+        if (form !== null) {
+          const notificationMessage = new NotificationMessage(
+            'New Submission!',
+            `There was a new submission to the form "${form.title}" by ${
+              user === null ? 'an Anonymous user' : user.getFullName()
+            }`
+          );
+          notificationService
+            .sendPushNotification(
+              ownerTokens.map((token) => token.tokenValue),
+              notificationMessage
+            )
+            .catch((err) => console.error(err));
+        }
       }
 
-      res.send(result);
+      res.send(answers);
     } catch (error) {
       console.log(error);
       next(new createHttpError.InternalServerError('Could not submit your response. Please contact an administrator'));

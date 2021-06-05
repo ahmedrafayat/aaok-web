@@ -15,7 +15,7 @@ type SendResetPasswordEmailOptions = {
   resetToken: string;
 };
 
-type SendAdminAssignmentEmailOptions = {
+type SendAdminAssignmentEmailToAdminOptions = {
   adminEmail: string;
   adminName: string;
   submissionId: number;
@@ -31,6 +31,15 @@ type SendEmailToManagersForNewSubmissionOptions = {
   formTitle: string;
   formDescription: string;
   submitter: User | null;
+  submissionDate: string;
+};
+
+type SendAssignmentEmailToUserOptions = {
+  formTitle: string;
+  formDescription: string;
+  status: string;
+  user: User;
+  assignedAdmin: User;
   submissionDate: string;
 };
 
@@ -109,8 +118,8 @@ export const sendResetPasswordEmail = (options: SendResetPasswordEmailOptions) =
   });
 };
 
-export const sendAdminAssignmentEmail = (options: SendAdminAssignmentEmailOptions) => {
-  return new Promise((resolve, reject) => {
+export const sendAdminAssignmentEmailToAdmin = (options: SendAdminAssignmentEmailToAdminOptions) => {
+  new Promise((resolve, reject) => {
     const mailOptions: SendMailOptions = {
       from: `"AAOK" <${fromEmail}>`,
       to: options.adminEmail,
@@ -136,7 +145,38 @@ export const sendAdminAssignmentEmail = (options: SendAdminAssignmentEmailOption
         resolve(true);
       }
     });
-  });
+  }).then();
+};
+
+export const sendAssignmentEmailToUser = (options: SendAssignmentEmailToUserOptions) => {
+  new Promise(async (resolve, reject) => {
+    const emailSubject = `Your '${options.formTitle}' submission is ${options.status}`;
+
+    const mailOptions: SendMailOptions = {
+      from: `"AAOK" <${fromEmail}>`,
+      to: options.user.email,
+      subject: emailSubject,
+      // @ts-ignore
+      context: {
+        emailSubject,
+        formTitle: options.formTitle,
+        user: options.user,
+        assignedAdmin: options.assignedAdmin,
+        date: options.submissionDate,
+      },
+      template: 'user-submission-status-change',
+    };
+
+    transporter.sendMail(mailOptions, (err) => {
+      if (err) {
+        console.error('Error occurred while sending email', err);
+        reject(false);
+      } else {
+        console.log('Email sent successfully!!');
+        resolve(true);
+      }
+    });
+  }).then();
 };
 
 export const sendEmailToManagersForNewSubmission = (options: SendEmailToManagersForNewSubmissionOptions) => {

@@ -15,7 +15,7 @@ import { NotificationToken } from '../models/NotificationToken';
 import { FormResponseStatus } from '../models/enums/FormResponseStatus';
 import { formResponseUtil } from '../utils/formResponseUtils';
 import { UserManagementTypes } from '../models/enums/UserManagementTypes';
-import { sendAdminAssignmentEmail, sendEmailToManagersForNewSubmission } from '../config/nodemailer';
+import { sendAdminAssignmentEmailToAdmin, sendEmailToManagersForNewSubmission } from '../config/nodemailer';
 
 const fetchResponseFormQuery = `
 SELECT
@@ -282,7 +282,8 @@ export const FormResponseController = {
 
         if (
           formResponse.hasOwner() &&
-          (newStatus === FormResponseStatus.IN_PROGRESS || newStatus === FormResponseStatus.RESOLVED)
+          (newStatus === FormResponseStatus.IN_PROGRESS || newStatus === FormResponseStatus.RESOLVED) &&
+          formResponse.status !== newStatus
         ) {
           shouldNotifyUserResponseInProgress = true;
         }
@@ -296,7 +297,7 @@ export const FormResponseController = {
         if (shouldSendAdminAssignmentNotification && assignedTo > 0) {
           const assignedAdmin = await User.findByPk(assignedTo);
           if (assignedAdmin !== null)
-            await sendAdminAssignmentEmail({
+            sendAdminAssignmentEmailToAdmin({
               submissionId: formResponse.responseId,
               adminName: assignedAdmin.getFullName(),
               adminEmail: assignedAdmin.email,

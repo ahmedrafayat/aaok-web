@@ -19,7 +19,7 @@
   <body>
       <container>
         <block>
-          <h2>{{name}} your "{{formTitle}}" submission is {{status}} with {{assignedTo}}</h2>
+          <h2>{{name}} your "{{formTitle}}" submission is {{status}} with {{assignedAdmin}}</h2>
           <p>
           <small>{{formDescription}}</small>
           <br>

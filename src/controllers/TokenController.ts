@@ -22,7 +22,9 @@ export const TokenController = {
           console.log('token exists and is for another user, then we must delete the existing token');
           existingToken.set('userId', id);
           existingToken.save();
-          await NotificationToken.deleteTokenByValue(newToken);
+          res.sendStatus(200);
+          return;
+          // await NotificationToken.deleteTokenByValue(newToken);
         }
         // Then create this token for this user
         try {

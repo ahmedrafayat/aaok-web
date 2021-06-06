@@ -1,7 +1,6 @@
-import { SignOptions } from 'jsonwebtoken';
+import JWT, { SignOptions } from 'jsonwebtoken';
 import { compare } from 'bcrypt';
 import createError from 'http-errors';
-import JWT from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
 
 import { redisClient } from './initRedis';
@@ -11,19 +10,13 @@ const ACCESS_TOKEN_EXPIRY = '30m';
 const REFRESH_TOKEN_EXPIRY = '1y';
 
 const access_token_secret =
-  process.env.NODE_ENV === 'production'
-    ? process.env.PROD_ACCESS_TOKEN_SECRET
-    : process.env.DEV_ACCESS_TOKEN_SECRET;
+  process.env.NODE_ENV === 'production' ? process.env.PROD_ACCESS_TOKEN_SECRET : process.env.DEV_ACCESS_TOKEN_SECRET;
 
 const refresh_token_secret =
-  process.env.NODE_ENV === 'production'
-    ? process.env.PROD_REFRESH_TOKEN_SECRET
-    : process.env.DEV_REFRESH_TOKEN_SECRET;
+  process.env.NODE_ENV === 'production' ? process.env.PROD_REFRESH_TOKEN_SECRET : process.env.DEV_REFRESH_TOKEN_SECRET;
 
 const reset_pass_token_secret =
-  process.env.NODE_ENV === 'production'
-    ? process.env.PROD_PASS_RESET_SECRET
-    : process.env.DEV_PASS_RESET_SECRET;
+  process.env.NODE_ENV === 'production' ? process.env.PROD_PASS_RESET_SECRET : process.env.DEV_PASS_RESET_SECRET;
 
 export type UserData = {
   firstName: string;
@@ -35,13 +28,12 @@ export type UserData = {
 export const JwtUtils = {
   signAccessToken: async (userData: UserData) => {
     return new Promise((resolve, reject) => {
-      const payload = userData;
       if (access_token_secret) {
         const options: SignOptions = {
           expiresIn: ACCESS_TOKEN_EXPIRY,
           issuer: process.env.HOST_URL || 'AAOKay',
         };
-        JWT.sign(payload, access_token_secret, options, (err, token) => {
+        JWT.sign(userData, access_token_secret, options, (err, token) => {
           if (err) {
             console.log(err.message);
             reject(new createError.InternalServerError());
@@ -55,13 +47,12 @@ export const JwtUtils = {
   },
   signRefreshToken: async (userData: UserData) => {
     return new Promise((resolve, reject) => {
-      const payload = userData;
       if (refresh_token_secret) {
         const options: SignOptions = {
           expiresIn: REFRESH_TOKEN_EXPIRY,
           issuer: process.env.HOST_URL || 'AAOKay',
         };
-        JWT.sign(payload, refresh_token_secret, options, (err, token) => {
+        JWT.sign(userData, refresh_token_secret, options, (err, token) => {
           if (err) {
             console.log(err.message);
             reject(new createError.InternalServerError());
@@ -109,12 +100,7 @@ export const JwtUtils = {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         JWT.verify(refreshToken, refresh_token_secret, (err, payload: any) => {
           if (err) return reject(new createError.Unauthorized());
-          if (
-            'firstName' in payload &&
-            'lastName' in payload &&
-            'isManagement' in payload &&
-            'id' in payload
-          ) {
+          if ('firstName' in payload && 'lastName' in payload && 'isManagement' in payload && 'id' in payload) {
             const userId = payload.id;
             redisClient.GET(userId, (err, result) => {
               if (err) {
@@ -170,7 +156,6 @@ export const JwtUtils = {
       if (reset_pass_token_secret) {
         JWT.verify(token, reset_pass_token_secret, (err, decodedToken) => {
           if (err) {
-            const message = err.name === 'JsonWebTokenError' ? 'Unauthorized' : err.message;
             reject(err);
           } else if (decodedToken) {
             resolve(true);

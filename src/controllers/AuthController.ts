@@ -2,21 +2,23 @@ import createError from 'http-errors';
 import { Op, UniqueConstraintError } from 'sequelize';
 import { NextFunction, Request, Response } from 'express';
 import JWT from 'jsonwebtoken';
-
 import { User } from '../models/User';
 import { JwtUtils } from '../utils/jwtUtils';
 import { redisClient } from '../utils/initRedis';
 import { sendResetPasswordEmail } from '../config/nodemailer';
+import { UserManagementTypes } from '../models/enums/UserManagementTypes';
 
 export const AuthController = {
   register: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { email, password, firstName, lastName } = req.body;
-      if (!email || !password || !firstName || !lastName)
-        throw new createError.BadRequest('Please enter all fields');
+      if (!email || !password || !firstName || !lastName) {
+        return next(new createError.BadRequest('Please enter all fields'));
+      }
 
-      if (typeof password !== 'string' || password.length < 8)
-        throw new createError.BadRequest('Password must be have at least 8 characters');
+      if (typeof password !== 'string' || password.length < 8) {
+        return next(new createError.BadRequest('Password must be have at least 8 characters'));
+      }
 
       // fetch user by email
       const userExists = await User.findOne({
@@ -33,14 +35,10 @@ export const AuthController = {
         firstName: String(firstName),
         lastName: String(lastName),
         isRegistered: 1,
-        isManagement: 0,
+        isManagement: UserManagementTypes.NORMAL_USER,
       });
 
-      if (
-        userExists !== null &&
-        (!userExists.isRegistered || !userExists.password) &&
-        userExists.isEnabled
-      ) {
+      if (userExists !== null && (!userExists.isRegistered || !userExists.password) && userExists.isEnabled) {
         const savedUser = await userExists
           .set('password', newUser.password)
           .set('firstName', newUser.firstName)
@@ -60,7 +58,7 @@ export const AuthController = {
           res.send({ accessToken, refreshToken });
         }
       } else if (userExists !== null && (userExists.isRegistered || userExists.password)) {
-        throw new createError.Conflict('A user with this email already exists');
+        return next(new createError.Conflict('A user with this email already exists'));
       }
       // when not exists, register and make disabled
       else {
@@ -70,7 +68,7 @@ export const AuthController = {
             password,
             firstName,
             lastName,
-            isManagement: 0,
+            isManagement: UserManagementTypes.NORMAL_USER,
             isRegistered: 1,
             isEnabled: 0,
           },
@@ -92,7 +90,9 @@ export const AuthController = {
     try {
       const { email, password } = req.body;
 
-      if (!email || !password) throw new createError.BadRequest('Invalid Username/Password');
+      if (!email || !password) {
+        return next(new createError.BadRequest('Invalid Username/Password'));
+      }
 
       const user = await User.findOne({
         where: {
@@ -103,15 +103,17 @@ export const AuthController = {
       });
 
       if (user === null) {
-        throw new createError.NotFound('User Not Registered');
+        return next(new createError.NotFound('User Not Registered'));
       }
 
       if (!user.isEnabled) {
-        throw new createError.Unauthorized('User is not enabled. Please contact an administrator');
+        return next(new createError.Unauthorized('User is not enabled. Please contact an administrator'));
       }
 
       const isMatch = await JwtUtils.isValidPassword(password, user.password);
-      if (!isMatch) throw new createError.Unauthorized('Invalid username/password');
+      if (!isMatch) {
+        return next(new createError.Unauthorized('Invalid username/password'));
+      }
 
       const tokenPayload = {
         firstName: user.firstName,
@@ -123,7 +125,9 @@ export const AuthController = {
       const refreshToken = await JwtUtils.signRefreshToken(tokenPayload);
       if (accessToken && refreshToken) {
         res.send({ accessToken, refreshToken });
-      } else throw new createError.InternalServerError();
+      } else {
+        return next(new createError.InternalServerError());
+      }
     } catch (error) {
       next(error);
     }
@@ -132,7 +136,9 @@ export const AuthController = {
   refreshToken: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { refreshToken } = req.body;
-      if (!refreshToken) throw new createError.BadRequest();
+      if (!refreshToken) {
+        return next(new createError.BadRequest());
+      }
       const tokenPayload = await JwtUtils.verifyRefreshToken(refreshToken);
 
       const accessToken = await JwtUtils.signAccessToken(tokenPayload);
@@ -140,7 +146,9 @@ export const AuthController = {
 
       if (accessToken && refToken) {
         res.send({ accessToken, refreshToken: refToken });
-      } else throw new createError.InternalServerError();
+      } else {
+        return next(new createError.InternalServerError());
+      }
     } catch (error) {
       next(error);
     }
@@ -149,10 +157,12 @@ export const AuthController = {
   logout: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { refreshToken } = req.body;
-      if (!refreshToken) throw new createError.BadRequest();
+      if (!refreshToken) {
+        return next(new createError.BadRequest());
+      }
       const userData = await JwtUtils.verifyRefreshToken(refreshToken);
 
-      redisClient.DEL(String(userData.id), (err, reply) => {
+      redisClient.DEL(String(userData.id), (err) => {
         if (err) {
           console.log(err.message);
           throw new createError.InternalServerError();
@@ -168,7 +178,9 @@ export const AuthController = {
     try {
       const { email, password } = req.body;
 
-      if (!email || !password) throw new createError.BadRequest('Invalid Username/Password');
+      if (!email || !password) {
+        return next(new createError.BadRequest('Invalid Username/Password'));
+      }
 
       const user = await User.findOne({
         where: {
@@ -179,15 +191,17 @@ export const AuthController = {
       });
 
       if (user === null) {
-        throw new createError.NotFound('User Not Registered');
+        return next(new createError.NotFound('User Not Registered'));
       }
 
-      if (user.isManagement === 0) {
-        throw new createError.Unauthorized('You are not allowed to access this site');
+      if (user.isManagement === UserManagementTypes.NORMAL_USER) {
+        return next(new createError.Unauthorized('You are not allowed to access this site'));
       }
 
       const isMatch = await isValidPassword(password, user.password);
-      if (!isMatch) throw new createError.Unauthorized('Invalid username/password');
+      if (!isMatch) {
+        return next(new createError.Unauthorized('Invalid username/password'));
+      }
 
       const tokenPayload = {
         firstName: user.firstName,
@@ -199,7 +213,9 @@ export const AuthController = {
       const refreshToken = await JwtUtils.signRefreshToken(tokenPayload);
       if (accessToken && refreshToken) {
         res.send({ accessToken, refreshToken });
-      } else throw new createError.InternalServerError();
+      } else {
+        return next(new createError.InternalServerError());
+      }
     } catch (error) {
       next(error);
     }
@@ -220,7 +236,7 @@ export const AuthController = {
         if (token) {
           user.resetToken = token;
           await user.save();
-          sendResetPasswordEmail({
+          await sendResetPasswordEmail({
             name: `${user.firstName} ${user.lastName}`,
             resetToken: token,
             toEmail: user.email,
@@ -243,13 +259,17 @@ export const AuthController = {
       if (decodedToken && typeof decodedToken !== 'string' && decodedToken['id']) {
         user = await User.findByPk(decodedToken.id);
         if (!user || user.resetToken !== token) {
-          throw new createError.Unauthorized(
-            'The password reset link is invalid or expired, please try again with a new link'
+          return next(
+            new createError.Unauthorized(
+              'The password reset link is invalid or expired, please try again with a new link'
+            )
           );
         }
       } else {
-        throw new createError.Unauthorized(
-          'The password reset link is invalid or expired, please try again with a new link'
+        return next(
+          new createError.Unauthorized(
+            'The password reset link is invalid or expired, please try again with a new link'
+          )
         );
       }
 
@@ -261,14 +281,14 @@ export const AuthController = {
           await user.save();
           res.send({ isManagement: user.isManagement });
         } else {
-          throw new createError.Unauthorized('Invalid token');
+          return next(new createError.Unauthorized('Invalid token'));
         }
       } else {
-        throw new createError.BadRequest();
+        return next(new createError.BadRequest());
       }
     } catch (e) {
       if (e.name === 'TokenExpiredError') {
-        next(new createError.Unauthorized('Token has expired'));
+        return next(new createError.Unauthorized('Token has expired'));
       }
       next(e);
     }

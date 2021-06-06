@@ -1,0 +1,38 @@
+<heml>
+  <head>
+    <subject>New '{{formTitle}}' submission from {{user}}</subject>
+    <preview>New '{{formTitle}}' submission from {{user}}</preview>
+  </head>
+  <style>
+    body {
+      color: white;
+    }
+    container {
+      background: #2D2D2D;
+      padding: 50px;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+  <body>
+      <container>
+        <block>
+          <h2>There’s been a new {{formTitle}} submission from {{user}}</h2>
+          <p>
+          <small>{{formDescription}}</small>
+          <br>
+          <small>{{userEmail}}</small>
+          <br>
+          <small>{{date}}</small>
+          </p>
+          <p><a href="{{submissionLink}}">Click here to view and manage the submission in full</a></p>
+        </block>
+        <br>
+        <block>
+          AAOK Team
+        </block>
+      </container>
+  </body>
+</heml>

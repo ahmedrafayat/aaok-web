@@ -1,41 +1,42 @@
 import { NextFunction, Request, Response } from 'express';
 import createHttpError from 'http-errors';
+import isNil from 'lodash/isNil';
 import { col, fn, Op, QueryTypes } from 'sequelize';
 
 import { User } from '../models/User';
 import { sequelize } from '../config/sequelize';
 import { sendEnabledEmail } from '../config/nodemailer';
+import { UserManagementTypes } from '../models/enums/UserManagementTypes';
 
 const disabledUsersAfterLastEnabledCountQuery = `
-SELECT 
-	CASE EXISTS(SELECT U.CREATED_AT FROM USERS U WHERE IS_ENABLED = 1)
-		WHEN TRUE THEN (SELECT COUNT (*) FROM USERS U2 WHERE U2.CREATED_AT > (SELECT U3.CREATED_AT FROM USERS U3 WHERE U3.IS_ENABLED = 1 ORDER BY U3.CREATED_AT DESC LIMIT 1))
-		ELSE (SELECT COUNT(*) FROM USERS U4)
-	END
+    SELECT CASE EXISTS(SELECT U.CREATED_AT FROM USERS U WHERE IS_ENABLED = 1)
+               WHEN TRUE THEN (SELECT COUNT(*)
+                               FROM USERS U2
+                               WHERE U2.CREATED_AT > (SELECT U3.CREATED_AT
+                                                      FROM USERS U3
+                                                      WHERE U3.IS_ENABLED = 1
+                                                      ORDER BY U3.CREATED_AT DESC
+                                                      LIMIT 1))
+               ELSE (SELECT COUNT(*) FROM USERS U4)
+               END
 `;
 
 const userListQuery = `
-SELECT
-   u.user_id "userId",
-   u.first_name || ' ' || u.last_name AS "name",
-   (
-   SELECT
-       count(*)::INTEGER
-   FROM
-       responses r
-   WHERE
-       r.user_id = u.user_id ) "submissions",
-   u.email,
-   u.is_enabled "isEnabled",
-   u.is_registered "isRegistered",
-   u.is_management "isManagement",  
-   u.created_at "createdAt",
-   u.updated_at "updatedAt"
-FROM
-   public.users u
-ORDER BY
-    u.created_at DESC, 
-    u.user_id ASC
+    SELECT u.user_id                             "userId",
+           u.first_name || ' ' || u.last_name AS "name",
+           (
+               SELECT count(*)::INTEGER
+               FROM responses r
+               WHERE r.user_id = u.user_id)      "submissions",
+           u.email,
+           u.is_enabled                          "isEnabled",
+           u.is_registered                       "isRegistered",
+           u.is_management                       "isManagement",
+           u.created_at                          "createdAt",
+           u.updated_at                          "updatedAt"
+    FROM public.users u
+    ORDER BY u.created_at DESC,
+             u.user_id
 `;
 
 export const UserController = {
@@ -54,11 +55,11 @@ export const UserController = {
     try {
       const term = req.query.name || '';
       const admin = req.query.admin === 'true' || false;
-      let adminCond = admin
+      const adminCond = admin
         ? [
             {
               isManagement: {
-                [Op.gt]: 0,
+                [Op.gt]: UserManagementTypes.NORMAL_USER,
               },
             },
           ]
@@ -66,11 +67,7 @@ export const UserController = {
 
       const users = await User.findAll({
         limit: 25,
-        attributes: [
-          ['user_id', 'userId'],
-          [fn('CONCAT', col('first_name'), ' ', col('last_name')), 'name'],
-          'email',
-        ],
+        attributes: [['user_id', 'userId'], [fn('CONCAT', col('first_name'), ' ', col('last_name')), 'name'], 'email'],
         where: {
           [Op.or]: [
             {
@@ -105,17 +102,13 @@ export const UserController = {
 
       const user = await User.findByPk(Number(userId));
 
-      if (newStatus === undefined) {
-        throw new createHttpError.BadRequest();
+      if (isNil(newStatus)) {
+        next(new createHttpError.BadRequest());
+        return;
       }
 
-      let emailSent = false;
-
       if (user) {
-        const updateUsers = await User.update(
-          { isEnabled: Number(newStatus) },
-          { where: { userId: userId } }
-        );
+        const updateUsers = await User.update({ isEnabled: Number(newStatus) }, { where: { userId: userId } });
         if (updateUsers.length > 0) {
           user.isEnabled = Number(newStatus);
         }
@@ -126,7 +119,8 @@ export const UserController = {
           });
         }
       } else {
-        throw new createHttpError.BadRequest('User does not exist');
+        next(new createHttpError.BadRequest('User does not exist'));
+        return;
       }
 
       res.send({ isEnabled: user.isEnabled });
@@ -142,22 +136,19 @@ export const UserController = {
       const user = await User.findByPk(Number(userId));
 
       if (newStatus === undefined) {
-        throw new createHttpError.BadRequest();
+        next(new createHttpError.BadRequest());
+        return;
       }
 
       if (user) {
-        const updateUsers = await User.update(
-          { isManagement: Number(newStatus) },
-          { where: { userId: userId } }
-        );
+        const updateUsers = await User.update({ isManagement: Number(newStatus) }, { where: { userId: userId } });
         if (updateUsers.length > 0) {
           user.isManagement = Number(newStatus);
         }
+        res.send({ isManagement: user.isManagement });
       } else {
-        throw new createHttpError.BadRequest('User does not exist');
+        next(new createHttpError.BadRequest('User does not exist'));
       }
-
-      res.send({ isManagement: user.isManagement });
     } catch (error) {
       next(error);
     }

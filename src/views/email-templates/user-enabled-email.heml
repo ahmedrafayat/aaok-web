@@ -1,0 +1,32 @@
+<heml>
+  <head>
+    <subject>You’re all set to go with our new AA OK App!!</subject>
+    <preview>You’re all set to go with our new AA OK App!!</preview>
+  </head>
+  <style>
+    body {
+      color: white;
+    }
+    container {
+      background: #2D2D2D;
+      padding: 50px;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+  <body>
+      <container>
+        <block>
+          <h2>Your AA OK account has been registered and approved {{name}},</h2>
+          <p>AA OK is an internal and confidential communication stream to improve your working environment.</p>
+          <p>Once an event has been submitted you will be kept updated on the progress.</p>
+        </block>
+        <br>
+        <block>
+          AAOK Team
+        </block>
+      </container>
+  </body>
+</heml>

@@ -1,4 +1,8 @@
 import nodemailer, { SendMailOptions } from 'nodemailer';
+import nodemailerHandlebars from 'nodemailer-express-handlebars';
+import path from 'path';
+import { User } from '../models/User';
+import { ServiceLinks } from '../utils/ServiceLinks';
 
 type SendEnabledEmailOptions = {
   toEmail: string;
@@ -11,138 +15,98 @@ type SendResetPasswordEmailOptions = {
   resetToken: string;
 };
 
+type SendAdminAssignmentEmailToAdminOptions = {
+  adminEmail: string;
+  adminName: string;
+  submissionId: number;
+  formTitle: string;
+  formDescription: string;
+  user: User | null;
+  submissionDate: string;
+};
+
+type SendEmailToManagersForNewSubmissionOptions = {
+  admins: User[];
+  submissionId: number;
+  formTitle: string;
+  formDescription: string;
+  submitter: User | null;
+  submissionDate: string;
+};
+
+type SendAssignmentEmailToUserOptions = {
+  formTitle: string;
+  formDescription: string;
+  status: string;
+  user: User | undefined;
+  assignedAdmin: User;
+  submissionDate: string;
+};
+
+const fromEmail = process.env.NODEMAILER_EMAIL || 'admin@associatedasphalt.biz';
+const mailerUser = process.env.NODEMAILER_EMAIL;
+const mailerPass = process.env.NODEMAILER_PASS;
+
 const transporter = nodemailer.createTransport({
   service: 'Outlook365',
   host: 'smtp.office365.com',
   port: 465,
-  secure: true, // true for 465, false for other ports
+  secure: true,
   auth: {
-    user: process.env.NODEMAILER_EMAIL, // generated ethereal user
-    pass: process.env.NODEMAILER_PASS, // generated ethereal password
+    user: mailerUser,
+    pass: mailerPass,
   },
 });
 
-export const sendEnabledEmail = (options: SendEnabledEmailOptions): Promise<boolean> => {
-  return new Promise((resolve, reject) => {
+transporter.use(
+  'compile',
+  nodemailerHandlebars({
+    viewEngine: {
+      extname: '.hbs',
+      partialsDir: path.join(__dirname, '../views/email-handlebars/'),
+      layoutsDir: path.join(__dirname, '../views/email-handlebars/'),
+      defaultLayout: '',
+    },
+    viewPath: path.join(__dirname, '../views/email-handlebars/'),
+    extName: '.hbs',
+  })
+);
+
+export const sendEnabledEmail = (options: SendEnabledEmailOptions) => {
+  new Promise((resolve, reject) => {
     const mailOptions: SendMailOptions = {
-      from: `"AAOK" <${process.env.NODEMAILER_EMAIL || 'admin@associatedasphalt.biz'}>`,
+      from: `"AAOK" <${fromEmail}>`,
       to: options.toEmail,
-      subject: 'AAOK: Your account has been activated!',
-      html: `
-      <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" />
-      <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
-        <head> </head>
-        <head>
-          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <meta name="x-apple-disable-message-reformatting" />
-          <!--[if !mso]><!-->
-          <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-          <!--<![endif]-->
-          <style type="text/css">
-            * {
-              text-size-adjust: 100%;
-              -ms-text-size-adjust: 100%;
-              -moz-text-size-adjust: 100%;
-              -webkit-text-size-adjust: 100%;
-            }
-            html {
-              height: 100%;
-              width: 100%;
-            }
-            body {
-              height: 100% !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              width: 100% !important;
-              mso-line-height-rule: exactly;
-            }
-            div[style*="margin: 16px 0"] {
-              margin: 0 !important;
-            }
-            table,
-            td {
-              mso-table-lspace: 0pt;
-              mso-table-rspace: 0pt;
-            }
-            img {
-              border: 0;
-              height: auto;
-              line-height: 100%;
-              outline: none;
-              text-decoration: none;
-              -ms-interpolation-mode: bicubic;
-            }
-            .ReadMsgBody,
-            .ExternalClass {
-              width: 100%;
-            }
-            .ExternalClass,
-            .ExternalClass p,
-            .ExternalClass span,
-            .ExternalClass td,
-            .ExternalClass div {
-              line-height: 100%;
-            }
-          </style>
-          <!--[if gte mso 9]>
-            <style type="text/css">
-            li { text-indent: -1em; }
-            table td { border-collapse: collapse; }
-            </style>
-            <![endif]-->
-          <title>Your account has been activated!</title>
-          <!-- content -->
-          <!--[if gte mso 9]><xml>
-            <o:OfficeDocumentSettings>
-              <o:AllowPNG/>
-              <o:PixelsPerInch>96</o:PixelsPerInch>
-            </o:OfficeDocumentSettings>
-            </xml><![endif]-->
-        </head>
-        <body class="body" style="margin: 0; width: 100%;">
-          <div class="preview" style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all;">AAOK Account activated&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
-          <table
-            class="bodyTable" role="presentation" width="100%" align="left" border="0" cellpadding="0" cellspacing="0" style="width: 100%; margin: 0;">
-            <tr>
-              <td class="body__content" align="left" width="100%" valign="top" style="font-family: Helvetica,Arial,sans-serif; font-size: 16px; line-height: 20px; color: #FFFFFF;">
-                <div class="container" style="margin: 0 auto; max-width: 600px; width: 100%;"> <!--[if mso | IE]>
-                  <table class="container__table__ie" role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin-right: auto; margin-left: auto;width: 600px" width="600" align="center">
-                    <tr>
-                      <td> <![endif]-->
-                        <table class="container__table" role="presentation" border="0" align="center" cellpadding="0" cellspacing="0" width="100%">
-                          <tr class="container__row">
-                            <td class="container__cell" width="100%" align="left" valign="top" style="background-color: #2D2D2D; padding: 50px;" bgcolor="#2D2D2D">
-                              <div class="row">
-                                <table class="row__table" width="100%" align="center" role="presentation" border="0" cellpadding="0" cellspacing="0" style="table-layout: fixed;">
-                                  <tr class="row__row">
-                                    <h1 large="4" class="header h1" style="margin: 20px 0; line-height: 40px; font-family: Helvetica,Arial,sans-serif; color: #FFFFFF;">Dear ${options.name},</h1>
-                                    <p large="4" class="text p" style="display: block; margin: 14px 0; font-family: Helvetica,Arial,sans-serif; font-size: 16px; line-height: 20px; color: #FFFFFF;">We thank you for registering to AAOK! An admin has reviewed your account and enabled it.</p>
-                                    <p large="4" class="text p" style="display: block; margin: 14px 0; font-family: Helvetica,Arial,sans-serif; font-size: 16px; line-height: 20px; color: #FFFFFF;">
-                                    You can now login with your email and start sharing your experiences through AAOK. Simply select a form and fill it up with the required information and submit it once you are ready! </p>
-                                  </tr>
-                                </table>
-                              </div>
-                              <div class="row">
-                                <table class="row__table" width="100%" align="center" role="presentation" border="0" cellpadding="0" cellspacing="0" style="table-layout: fixed;">
-                                  <tr class="row__row"> From, <br large="12" /> AAOK Team </tr>
-                                </table>
-                              </div>
-                            </td>
-                          </tr>
-                        </table> <!--[if mso | IE]> </td>
-                    </tr>
-                  </table> <![endif]--> </div>
-              </td>
-            </tr>
-            </table>
-            <div style="display:none; white-space:nowrap; font-size:15px; line-height:0;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </div>
-        </body>
-      </html>
-      `,
+      subject: 'You’re all set to go with our new AA OK App!!',
+      // @ts-ignore
+      context: { name: options.name },
+      template: 'user-enabled-email',
     };
 
-    transporter.sendMail(mailOptions, (err, data) => {
+    transporter.sendMail(mailOptions, (err) => {
+      if (err) {
+        console.error('Error occurred while sending email', err);
+        reject(false);
+      } else {
+        console.log('Email sent successfully!!');
+        resolve(true);
+      }
+    });
+  }).then();
+};
+
+export const sendResetPasswordEmail = (options: SendResetPasswordEmailOptions) => {
+  return new Promise((resolve, reject) => {
+    const mailOptions: SendMailOptions = {
+      from: `"AAOK" <${fromEmail}>`,
+      to: options.toEmail,
+      subject: 'Reset your AA OK password',
+      // @ts-ignore
+      context: { name: options.name, resetPasswordUrl: ServiceLinks.getPasswordResetLink(options.resetToken) },
+      template: 'reset-password-email',
+    };
+
+    transporter.sendMail(mailOptions, (err) => {
       if (err) {
         console.error('Error occurred while sending email', err);
         reject(false);
@@ -154,132 +118,25 @@ export const sendEnabledEmail = (options: SendEnabledEmailOptions): Promise<bool
   });
 };
 
-export const sendResetPasswordEmail = (options: SendResetPasswordEmailOptions) => {
-  return new Promise((resolve, reject) => {
+export const sendAdminAssignmentEmailToAdmin = (options: SendAdminAssignmentEmailToAdminOptions) => {
+  new Promise((resolve, reject) => {
     const mailOptions: SendMailOptions = {
-      from: `"AAOK" <${process.env.NODEMAILER_EMAIL || 'admin@associatedasphalt.biz'}>`,
-      to: options.toEmail,
-      subject: 'AAOK: Reset Password',
-      html: `
-      <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" />
-      <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
-        <head> </head>
-        <head>
-          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <meta name="x-apple-disable-message-reformatting" />
-          <!--[if !mso]><!-->
-          <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-          <!--<![endif]-->
-          <style type="text/css">
-            * {
-              text-size-adjust: 100%;
-              -ms-text-size-adjust: 100%;
-              -moz-text-size-adjust: 100%;
-              -webkit-text-size-adjust: 100%;
-            }
-
-            html {
-              height: 100%;
-              width: 100%;
-            }
-
-            body {
-              height: 100% !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              width: 100% !important;
-              mso-line-height-rule: exactly;
-            }
-
-            div[style*="margin: 16px 0"] {
-              margin: 0 !important;
-            }
-
-            table,
-            td {
-              mso-table-lspace: 0pt;
-              mso-table-rspace: 0pt;
-            }
-
-            img {
-              border: 0;
-              height: auto;
-              line-height: 100%;
-              outline: none;
-              text-decoration: none;
-              -ms-interpolation-mode: bicubic;
-            }
-
-            .ReadMsgBody,
-            .ExternalClass {
-              width: 100%;
-            }
-
-            .ExternalClass,
-            .ExternalClass p,
-            .ExternalClass span,
-            .ExternalClass td,
-            .ExternalClass div {
-              line-height: 100%;
-            }
-          </style>
-          <!--[if gte mso 9]>
-            <style type="text/css">
-            li { text-indent: -1em; }
-            table td { border-collapse: collapse; }
-            </style>
-            <![endif]-->
-          <title>Your AAOK Account has been activated!</title>
-          <!-- content -->
-          <!--[if gte mso 9]><xml>
-            <o:OfficeDocumentSettings>
-              <o:AllowPNG/>
-              <o:PixelsPerInch>96</o:PixelsPerInch>
-            </o:OfficeDocumentSettings>
-            </xml><![endif]-->
-        </head>
-        <body class="body" style="margin: 0; width: 100%;">
-          <div class="preview" style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all;">AAOK Account activated&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
-          <table
-            class="bodyTable" role="presentation" width="100%" align="left" border="0" cellpadding="0" cellspacing="0" style="width: 100%; margin: 0;">
-            <tr>
-              <td class="body__content" align="left" width="100%" valign="top" style="font-family: Helvetica,Arial,sans-serif; font-size: 16px; line-height: 20px; color: #FFFFFF;">
-                <div class="container" style="margin: 0 auto; max-width: 600px; width: 100%;"> <!--[if mso | IE]>
-                  <table class="container__table__ie" role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin-right: auto; margin-left: auto;width: 600px" width="600" align="center">
-                    <tr>
-                      <td> <![endif]-->
-                        <table class="container__table" role="presentation" border="0" align="center" cellpadding="0" cellspacing="0" width="100%">
-                          <tr class="container__row">
-                            <td class="container__cell" width="100%" align="left" valign="top" style="background-color: #2D2D2D; padding: 50px;" bgcolor="#2D2D2D">
-                              <div class="row">
-                                <table class="row__table" width="100%" align="center" role="presentation" border="0" cellpadding="0" cellspacing="0" style="table-layout: fixed;">
-                                  <tr class="row__row">
-                                    <h1 large="6" class="header h1" style="margin: 20px 0; line-height: 40px; font-family: Helvetica,Arial,sans-serif; color: #FFFFFF;">Dear ${options.name},</h1>
-                                    <p large="6" class="text p" style="display: block; margin: 14px 0; font-family: Helvetica,Arial,sans-serif; font-size: 16px; line-height: 20px; color: #FFFFFF;">Please visit the follow <a href="http://${process.env.RESET_PASSWORD_BASE_URL}/${options.resetToken}" class="a"><span class="a__text">Link</span></a> to continue resetting your password.</p>
-                                  </tr>
-                                </table>
-                              </div>
-                              <div class="row">
-                                <table class="row__table" width="100%" align="center" role="presentation" border="0" cellpadding="0" cellspacing="0" style="table-layout: fixed;">
-                                  <tr class="row__row"> From, <br large="12" /> AAOK Team </tr>
-                                </table>
-                              </div>
-                            </td>
-                          </tr>
-                        </table> <!--[if mso | IE]> </td>
-                    </tr>
-                  </table> <![endif]--> </div>
-              </td>
-            </tr>
-            </table>
-            <div style="display:none; white-space:nowrap; font-size:15px; line-height:0;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </div>
-        </body>
-      </html>
-      `,
+      from: `"AAOK" <${fromEmail}>`,
+      to: options.adminEmail,
+      subject: `A New '${options.formTitle}' submission has been assigned to you`,
+      // @ts-ignore
+      context: {
+        adminName: options.adminName,
+        submissionLink: ServiceLinks.getSubmissionDetailsUrl(options.submissionId),
+        formTitle: options.formTitle,
+        formDescription: options.formDescription,
+        date: options.submissionDate,
+        userEmail: options.user?.email || '',
+      },
+      template: 'admin-assignment-alert-email',
     };
 
-    transporter.sendMail(mailOptions, (err, data) => {
+    transporter.sendMail(mailOptions, (err) => {
       if (err) {
         console.error('Error occurred while sending email', err);
         reject(false);
@@ -288,5 +145,77 @@ export const sendResetPasswordEmail = (options: SendResetPasswordEmailOptions) =
         resolve(true);
       }
     });
-  });
+  }).then();
+};
+
+export const sendAssignmentEmailToUser = (options: SendAssignmentEmailToUserOptions) => {
+  new Promise(async (resolve, reject) => {
+    const emailSubject = `Your '${options.formTitle}' submission is ${options.status}`;
+
+    const mailOptions: SendMailOptions = {
+      from: `"AAOK" <${fromEmail}>`,
+      to: options.user?.email,
+      subject: emailSubject,
+      // @ts-ignore
+      context: {
+        emailSubject,
+        formTitle: options.formTitle,
+        formDescription: options.formDescription,
+        userEmail: options.user?.email || '',
+        assignedAdminName: options.assignedAdmin.getFullName(),
+        date: options.submissionDate,
+      },
+      template: 'user-submission-status-change',
+    };
+
+    transporter.sendMail(mailOptions, (err) => {
+      if (err) {
+        console.error('Error occurred while sending email', err);
+        reject(false);
+      } else {
+        console.log('Email sent successfully!!');
+        resolve(true);
+      }
+    });
+  }).then();
+};
+
+export const sendEmailToManagersForNewSubmission = (options: SendEmailToManagersForNewSubmissionOptions) => {
+  new Promise(async (resolve, reject) => {
+    const adminEmails = options.admins.map((admin) => admin.email);
+    console.log('Sending emails to the following emails', adminEmails.join());
+
+    const emailSubject = `New '${options.formTitle}' submission from ${
+      options.submitter ? options.submitter.getFullName() : 'an Anonymous User'
+    }`;
+
+    const mailOptions: SendMailOptions = {
+      from: `"AAOK" <${fromEmail}>`,
+      to: process.env.SUPER_USER_EMAIL || 'aaokapp@gmail.com',
+      subject: emailSubject,
+      bcc: adminEmails,
+      // @ts-ignore
+      context: {
+        emailSubject: emailSubject,
+        formTitle: options.formTitle,
+        formDescription: options.formDescription,
+        user: options.submitter,
+        userFullName: options.submitter?.getFullName() || '',
+        userEmail: options.submitter?.email || '',
+        date: options.submissionDate,
+        submissionLink: ServiceLinks.getSubmissionDetailsUrl(options.submissionId),
+      },
+      template: 'new-submission-alert-admin',
+    };
+
+    transporter.sendMail(mailOptions, (err) => {
+      if (err) {
+        console.error('Error occurred while sending email', err);
+        reject(false);
+      } else {
+        console.log('Email sent successfully!!');
+        resolve(true);
+      }
+    });
+  }).then();
 };

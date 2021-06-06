@@ -4,6 +4,7 @@ import { QueryTypes } from 'sequelize';
 
 import { Form } from '../models/Form';
 import { sequelize } from '../config/sequelize';
+import { AppRequest } from '../models/types/AppRequest';
 
 const getFormsWithNameQuery = `
 SELECT 
@@ -33,10 +34,13 @@ export const FormController = {
       next(error);
     }
   },
-  getFormsWithFields: async (req: Request, res: Response, next: NextFunction) => {
+  getFormsWithFields: async (req: AppRequest, res: Response, next: NextFunction) => {
     try {
       // @ts-ignore
       const decodedToken = req.payload;
+      if (!decodedToken) {
+        return;
+      }
       const isManagement = !!Number(decodedToken.isManagement);
 
       const formsFields = await sequelize.query(

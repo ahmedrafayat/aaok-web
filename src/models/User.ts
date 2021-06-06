@@ -2,6 +2,8 @@ import { genSalt, hash } from 'bcrypt';
 import { DataTypes, Model, Optional } from 'sequelize';
 
 import { sequelize } from '../config/sequelize';
+import { NotificationToken } from './NotificationToken';
+import { UserManagementTypes } from './enums/UserManagementTypes';
 
 const SALT_ROUNDS = 10;
 
@@ -13,7 +15,7 @@ interface UserAttributes {
   password: string;
   isEnabled: number;
   isRegistered: number;
-  isManagement: number;
+  isManagement: UserManagementTypes;
   resetToken: string;
   createdAt: string;
   updatedAt: string;
@@ -40,11 +42,17 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   public password!: string;
   public isEnabled!: number;
   public isRegistered!: number;
-  public isManagement!: number;
+  public isManagement!: UserManagementTypes;
   public resetToken!: string;
+
+  public readonly notificationTokens?: NotificationToken[];
 
   public createdAt!: string;
   public updatedAt!: string;
+
+  public getFullName() {
+    return this.firstName + ' ' + this.lastName;
+  }
 }
 
 User.init(

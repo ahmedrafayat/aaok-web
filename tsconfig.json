@@ -12,7 +12,4 @@
     "removeComments": true,
     "forceConsistentCasingInFileNames": true
   },
-  "exclude": [
-    "email-templates"
-  ]
 }

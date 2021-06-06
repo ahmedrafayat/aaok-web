@@ -116,13 +116,13 @@
                     <td class="block__cell" width="100%" align="left" valign="top">
                       <h2 class="header h2"
                           style="margin: 20px 0; line-height: 30px; font-family: Helvetica,Arial,sans-serif; color: #FFFFFF;">{{name}}
-                        your "{{formTitle}}" submission is {{status}} with {{assignedAdmin}}</h2>
+                        Your "{{formTitle}}" submission is {{status}} with {{assignedAdminName}}</h2>
                       <p class="text p"
                          style="display: block; margin: 14px 0; font-family: Helvetica,Arial,sans-serif; font-size: 16px; line-height: 20px; color: #FFFFFF;">
                         <small>{{formDescription}}</small>
-                        {{#if user}}
+                        {{#if userEmail}}
                           <br />
-                          <small>{{user.email}}</small>
+                          <small>{{userEmail}}</small>
                         {{/if}}
                         <br />
                         <small>{{date}}</small>

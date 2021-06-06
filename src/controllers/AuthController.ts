@@ -236,7 +236,7 @@ export const AuthController = {
         if (token) {
           user.resetToken = token;
           await user.save();
-          sendResetPasswordEmail({
+          await sendResetPasswordEmail({
             name: `${user.firstName} ${user.lastName}`,
             resetToken: token,
             toEmail: user.email,

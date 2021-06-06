@@ -20,6 +20,8 @@ export const TokenController = {
         // token with save value exists and is for another user, then we must delete the existing token
         if (!isNil(existingToken) && existingToken.userId !== id) {
           console.log('token exists and is for another user, then we must delete the existing token');
+          existingToken.set('userId', id);
+          existingToken.save();
           await NotificationToken.deleteTokenByValue(newToken);
         }
         // Then create this token for this user

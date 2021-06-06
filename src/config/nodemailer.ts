@@ -72,8 +72,8 @@ transporter.use(
   })
 );
 
-export const sendEnabledEmail = (options: SendEnabledEmailOptions): Promise<boolean> => {
-  return new Promise((resolve, reject) => {
+export const sendEnabledEmail = (options: SendEnabledEmailOptions) => {
+  new Promise((resolve, reject) => {
     const mailOptions: SendMailOptions = {
       from: `"AAOK" <${fromEmail}>`,
       to: options.toEmail,
@@ -92,7 +92,7 @@ export const sendEnabledEmail = (options: SendEnabledEmailOptions): Promise<bool
         resolve(true);
       }
     });
-  });
+  }).then();
 };
 
 export const sendResetPasswordEmail = (options: SendResetPasswordEmailOptions) => {
@@ -131,7 +131,7 @@ export const sendAdminAssignmentEmailToAdmin = (options: SendAdminAssignmentEmai
         formTitle: options.formTitle,
         formDescription: options.formDescription,
         date: options.submissionDate,
-        user: options.user,
+        userEmail: options.user?.email || '',
       },
       template: 'admin-assignment-alert-email',
     };
@@ -160,8 +160,9 @@ export const sendAssignmentEmailToUser = (options: SendAssignmentEmailToUserOpti
       context: {
         emailSubject,
         formTitle: options.formTitle,
-        user: options.user,
-        assignedAdmin: options.assignedAdmin,
+        formDescription: options.formDescription,
+        userEmail: options.user?.email || '',
+        assignedAdminName: options.assignedAdmin.getFullName(),
         date: options.submissionDate,
       },
       template: 'user-submission-status-change',
@@ -199,6 +200,8 @@ export const sendEmailToManagersForNewSubmission = (options: SendEmailToManagers
         formTitle: options.formTitle,
         formDescription: options.formDescription,
         user: options.submitter,
+        userFullName: options.submitter?.getFullName() || '',
+        userEmail: options.submitter?.email || '',
         date: options.submissionDate,
         submissionLink: ServiceLinks.getSubmissionDetailsUrl(options.submissionId),
       },

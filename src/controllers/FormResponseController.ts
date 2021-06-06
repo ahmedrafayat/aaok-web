@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { col, fn, QueryTypes, Transaction } from 'sequelize';
+import { col, fn, Op, QueryTypes, Transaction } from 'sequelize';
 import format from 'date-fns/format';
 import createHttpError from 'http-errors';
 import { Field } from '../models/Field';
@@ -22,79 +22,65 @@ import {
 } from '../config/nodemailer';
 
 const fetchResponseFormQuery = `
-SELECT
-    f.title,
-    f.description,
-    u.email,
-    COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "submitter",
-    COALESCE(u2.first_name || ' ' || u2.last_name, null) "assignedTo",
-    r.assigned_to "assignedToId",
-    r.status status,
-    r.notes notes
-FROM
-    responses r
-INNER JOIN forms f ON
-    f.form_id = r.form_id
-LEFT JOIN users u ON
-    u.user_id = r.user_id
-LEFT JOIN users u2 ON
-    u2.user_id = r.assigned_to
-WHERE
-    r.response_id = :responseId
+    SELECT f.title,
+           f.description,
+           u.email,
+           COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "submitter",
+           u2.first_name || ' ' || u2.last_name                           "assignedTo",
+           r.assigned_to                                                  "assignedToId",
+           r.status,
+           r.notes
+    FROM responses r
+             INNER JOIN forms f ON
+        f.form_id = r.form_id
+             LEFT JOIN users u ON
+        u.user_id = r.user_id
+             LEFT JOIN users u2 ON
+        u2.user_id = r.assigned_to
+    WHERE r.response_id = :responseId
 `;
 
 const fetchResponseListQuery = (filterQuery: string) => `
-SELECT
-    r.response_id "responseId",
-    f.title title,
-    COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "name",
-    u.email email,
-    COALESCE(u2.first_name || ' ' || u2.last_name, '') "assignedTo",
-    r.notes notes,
-    r.status status,
-    r.created_at "createdAt",
-    (
-    SELECT
-        array_to_json(array_agg(row_to_json(t)))
-    FROM
-        (
-        SELECT
-            a2.value -> 'value' "value",
-            f2.field_key "fieldKey"
-        FROM
-            answers a2,
-            fields f2
-        WHERE
-            f2.field_id = a2.field_id
-            AND a2.response_id = r.response_id
-            AND f2.field_type IN (0, 3, 7)) t) "extraFields"
-FROM
-    responses r
-INNER JOIN forms f ON
-    r.form_id = f.form_id
-LEFT JOIN users u ON
-    r.user_id = u.user_id
-LEFT JOIN users u2 ON
-    r.assigned_to = u2.user_id
-${filterQuery}
-ORDER BY
-    r.created_at DESC,
-    r.response_id ASC
+    SELECT r.response_id AS                                               "responseId",
+           f.title       AS                                               "title",
+           COALESCE(u.first_name || ' ' || u.last_name, 'Anonymous User') "name",
+           u.email       AS                                               "email",
+           COALESCE(u2.first_name || ' ' || u2.last_name, '')             "assignedTo",
+           r.notes       AS                                               "notes",
+           r.status      AS                                               "status",
+           r.created_at                                                   "createdAt",
+           (
+               SELECT array_to_json(array_agg(row_to_json(t)))
+               FROM (
+                        SELECT a2.value -> 'value' "value",
+                               f2.field_key        "fieldKey"
+                        FROM answers a2,
+                             fields f2
+                        WHERE f2.field_id = a2.field_id
+                          AND a2.response_id = r.response_id
+                          AND f2.field_type IN (0, 3, 7)) t)              "extraFields"
+    FROM responses r
+             INNER JOIN forms f ON
+        r.form_id = f.form_id
+             LEFT JOIN users u ON
+        r.user_id = u.user_id
+             LEFT JOIN users u2 ON
+            r.assigned_to = u2.user_id
+            ${filterQuery}
+    ORDER BY r.created_at DESC,
+             r.response_id
 `;
 
 const fetchCsvGenerationData = (responseIds: string) => `
-select
-    a.value ->> 'value' "value",
-    a.response_id "responseId",
-    f.field_key "fieldKey",
-    f.label 
-from
-    answers a,
-    fields f
-where
-    f.field_id = a.field_id
-    and a.response_id in (${responseIds})
-    and f.field_type in (0, 7)
+    select a.value ->> 'value' AS "value",
+           a.response_id          "responseId",
+           f.field_key            "fieldKey",
+           f.label
+    from answers a,
+         fields f
+    where f.field_id = a.field_id
+      and a.response_id in (${responseIds})
+      and f.field_type in (0, 7)
 `;
 
 export const FormResponseController = {
@@ -150,7 +136,7 @@ export const FormResponseController = {
               isManagement: UserManagementTypes.ADMIN,
               isEnabled: 1,
             },
-            attributes: ['email'],
+            attributes: ['userId', 'email'],
           });
         } catch (e) {
           console.error(e);
@@ -165,7 +151,7 @@ export const FormResponseController = {
             submitter: user,
             formTitle: form.title,
             formDescription: form.description,
-            submissionDate: format(newResponse.createdAt, 'do LLL yyyy HH:mm'),
+            submissionDate: format(newResponse.createdAt, 'do LLL yyy HH:mm'),
           });
 
           const notificationMessage = new NotificationMessage(
@@ -232,7 +218,9 @@ export const FormResponseController = {
 
       const adminUsers = await User.findAll({
         where: {
-          isManagement: UserManagementTypes.NORMAL_USER,
+          isManagement: {
+            [Op.gt]: UserManagementTypes.NORMAL_USER,
+          },
         },
         attributes: ['user_id', [fn('CONCAT', col('first_name'), ' ', col('last_name')), 'name']],
       });
@@ -299,7 +287,12 @@ export const FormResponseController = {
         const savedResponse = await formResponse.save();
 
         if (shouldSendAdminAssignmentNotification && assignedTo > 0) {
-          const assignedAdmin = await User.findByPk(assignedTo);
+          const assignedAdmin = await User.findByPk(assignedTo, {
+            include: {
+              model: NotificationToken,
+              as: 'notificationTokens',
+            },
+          });
           if (assignedAdmin !== null)
             sendAdminAssignmentEmailToAdmin({
               submissionId: formResponse.responseId,
@@ -310,9 +303,19 @@ export const FormResponseController = {
               submissionDate: format(formResponse.createdAt, 'do LLL yyyy HH:mm'),
               user: formResponse.owner || null,
             });
+          const notificationMessage = new NotificationMessage(
+            `Assigned to form`,
+            `A New '${formResponse.form.title}' submission has been assigned to you`
+          );
+          notificationService
+            .sendPushNotification(
+              (assignedAdmin?.notificationTokens || []).map((token) => token.tokenValue),
+              notificationMessage
+            )
+            .catch((e) => console.error(e));
         }
 
-        // If notification should be sent
+        // If notification should be sent to user
         if (
           savedResponse &&
           shouldNotifyUserResponseInProgress &&
@@ -322,27 +325,31 @@ export const FormResponseController = {
         ) {
           const assignedAdmin = await User.findByPk(savedResponse.assignedTo);
           const ownerTokens = await NotificationToken.getUserTokens(formResponse.userId);
+          const tokenStrings = ownerTokens.map((token) => token.tokenValue);
+          const sendEmailToUser = () => {
+            if (assignedAdmin !== null)
+              sendAssignmentEmailToUser({
+                assignedAdmin,
+                user: formResponse.owner,
+                formTitle: formResponse.form?.title || '',
+                formDescription: formResponse.form?.description || '',
+                submissionDate: format(formResponse.createdAt, 'do LLL yyyy HH:mm'),
+                status: FormResponse.getStatusText(savedResponse.status),
+              });
+          };
 
           if (assignedAdmin !== null) {
             const notificationMessage = new NotificationMessage(
               `Status update! ${FormResponse.getStatusText(formResponse.status)}`,
               `${FormResponse.getStatusNotificationBody(formResponse.status)} "${formResponse.form.title}"`
             );
-            notificationService
-              .sendPushNotification(
-                ownerTokens.map((token) => token.tokenValue),
-                notificationMessage,
-                () =>
-                  sendAssignmentEmailToUser({
-                    assignedAdmin,
-                    user: formResponse.owner,
-                    formTitle: formResponse.form?.title || '',
-                    formDescription: formResponse.form?.description || '',
-                    submissionDate: format(formResponse.createdAt, 'do LLL yyyy HH:mm'),
-                    status: FormResponse.getStatusText(savedResponse.status),
-                  })
-              )
-              .catch((err) => console.error(err));
+            if (tokenStrings.length > 0) {
+              notificationService
+                .sendPushNotification(tokenStrings, notificationMessage, sendEmailToUser)
+                .catch((err) => console.error(err));
+            } else {
+              sendEmailToUser();
+            }
           }
         }
 

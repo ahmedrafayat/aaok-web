@@ -22,7 +22,7 @@ const apiBaseUrl = process.env.API_BASE_URL;
 const app = express();
 
 app.use(compression());
-app.use(morgan('dev'));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());

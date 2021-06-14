@@ -74,6 +74,8 @@ transporter.use(
 
 export const sendEnabledEmail = (options: SendEnabledEmailOptions) => {
   new Promise((resolve, reject) => {
+    console.log('SENDING ENABLED EMAIL TO: ' + options.toEmail);
+
     const mailOptions: SendMailOptions = {
       from: `"AAOK" <${fromEmail}>`,
       to: options.toEmail,
@@ -97,6 +99,7 @@ export const sendEnabledEmail = (options: SendEnabledEmailOptions) => {
 
 export const sendResetPasswordEmail = (options: SendResetPasswordEmailOptions) => {
   return new Promise((resolve, reject) => {
+    console.log('SENDING RESET PASSWORD EMAIL TO: ' + options.toEmail);
     const mailOptions: SendMailOptions = {
       from: `"AAOK" <${fromEmail}>`,
       to: options.toEmail,
@@ -120,6 +123,7 @@ export const sendResetPasswordEmail = (options: SendResetPasswordEmailOptions) =
 
 export const sendAdminAssignmentEmailToAdmin = (options: SendAdminAssignmentEmailToAdminOptions) => {
   new Promise((resolve, reject) => {
+    console.log('SENDING NEW ASSIGNMENT EMAIL TO ADMIN: ' + options.adminEmail);
     const mailOptions: SendMailOptions = {
       from: `"AAOK" <${fromEmail}>`,
       to: options.adminEmail,
@@ -150,6 +154,7 @@ export const sendAdminAssignmentEmailToAdmin = (options: SendAdminAssignmentEmai
 
 export const sendAssignmentEmailToUser = (options: SendAssignmentEmailToUserOptions) => {
   new Promise(async (resolve, reject) => {
+    console.log('SENDING ASSIGNMENT ALERT EMAIL TO USER: ' + options.user?.email);
     const emailSubject = `Your '${options.formTitle}' submission is ${options.status}`;
 
     const mailOptions: SendMailOptions = {
@@ -183,7 +188,7 @@ export const sendAssignmentEmailToUser = (options: SendAssignmentEmailToUserOpti
 export const sendEmailToManagersForNewSubmission = (options: SendEmailToManagersForNewSubmissionOptions) => {
   new Promise(async (resolve, reject) => {
     const adminEmails = options.admins.map((admin) => admin.email);
-    console.log('Sending emails to the following emails', adminEmails.join());
+    console.log('SENDING NEW SUBMISSON EMAIL TO THE ADMINS: ', adminEmails.join());
 
     const emailSubject = `New '${options.formTitle}' submission from ${
       options.submitter ? options.submitter.getFullName() : 'an Anonymous User'

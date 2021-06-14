@@ -160,6 +160,7 @@ export const FormResponseController = {
               user === null ? 'an Anonymous user' : user.getFullName()
             }`
           );
+          console.log('SENDING NEW SUBMISSON NOTIFICATION TO THE ADMINS');
           notificationService
             .sendPushNotification(
               ownerTokens.map((token) => token.tokenValue),
@@ -171,7 +172,7 @@ export const FormResponseController = {
 
       res.send(answers);
     } catch (error) {
-      console.log(error);
+      console.error(error);
       next(new createHttpError.InternalServerError('Could not submit your response. Please contact an administrator'));
     }
   },
@@ -236,7 +237,7 @@ export const FormResponseController = {
   },
   getCsvGenerationData: async (req: Request, res: Response, next: NextFunction) => {
     const responseIds = req.query.responseIds;
-    console.log(responseIds);
+    console.log('IN GetCsvGenerationData with response IDs', responseIds);
 
     try {
       if (typeof responseIds === 'string' && responseIds.length > 0) {
@@ -293,7 +294,7 @@ export const FormResponseController = {
               as: 'notificationTokens',
             },
           });
-          if (assignedAdmin !== null)
+          if (assignedAdmin !== null) {
             sendAdminAssignmentEmailToAdmin({
               submissionId: formResponse.responseId,
               adminName: assignedAdmin.getFullName(),
@@ -303,17 +304,19 @@ export const FormResponseController = {
               submissionDate: format(formResponse.createdAt, 'do LLL yyyy HH:mm'),
               user: formResponse.owner || null,
             });
-          const notificationMessage = new NotificationMessage(
-            `Assigned to form`,
-            `A New '${formResponse.form.title}' submission has been assigned to you`
-          );
-          notificationService
-            .sendPushNotification(
-              (assignedAdmin?.notificationTokens || []).map((token) => token.tokenValue),
-              notificationMessage
-            )
-            .catch((e) => console.error('Failed to send admin assignment notification' + e))
-            .then(() => console.log('Admin assignment notification has been sent'));
+            const notificationMessage = new NotificationMessage(
+              `Assigned to form`,
+              `A New '${formResponse.form.title}' submission has been assigned to you`
+            );
+            console.log('SENDING NEW ASSIGNMENT NOTIFICATION TO ADMIN :' + assignedAdmin?.email);
+            notificationService
+              .sendPushNotification(
+                (assignedAdmin?.notificationTokens || []).map((token) => token.tokenValue),
+                notificationMessage
+              )
+              .catch((e) => console.error('Failed to send admin assignment notification' + e))
+              .then(() => console.log('Admin assignment notification has been sent'));
+          }
         }
 
         // If notification should be sent to user
@@ -344,6 +347,7 @@ export const FormResponseController = {
               `Status update! ${FormResponse.getStatusText(formResponse.status)}`,
               `${FormResponse.getStatusNotificationBody(formResponse.status)} "${formResponse.form.title}"`
             );
+            console.log('SENDING ASSIGNMENT ALERT NOTIFICATION TO USER :' + formResponse.owner.email);
             if (tokenStrings.length > 0) {
               notificationService
                 .sendPushNotification(tokenStrings, notificationMessage, sendEmailToUser)
@@ -359,6 +363,7 @@ export const FormResponseController = {
         next(new createHttpError.BadRequest('Form Response not found'));
       }
     } catch (e) {
+      console.error(e);
       next(e);
     }
   },

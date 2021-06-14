@@ -44,6 +44,19 @@ class NotificationService {
       }
     })();
 
+    tickets.forEach((ticket) => {
+      if (ticket.status === 'ok') {
+        console.log('NOTIFICATION SERVICE: Successfully sent ticket' + ticket.id);
+      } else if (ticket.status === 'error') {
+        console.error(
+          'NOTIFICATION SERVICE: Failed to send ticket MESSAGE:' +
+            ticket.message +
+            '\n ERROR: ' +
+            (ticket.details?.error || 'Unknown Error')
+        );
+      }
+    });
+
     if (tickets.some((ticket) => ticket.status === 'error') && onError) {
       onError();
     }

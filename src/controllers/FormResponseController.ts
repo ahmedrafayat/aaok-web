@@ -312,7 +312,8 @@ export const FormResponseController = {
               (assignedAdmin?.notificationTokens || []).map((token) => token.tokenValue),
               notificationMessage
             )
-            .catch((e) => console.error(e));
+            .catch((e) => console.error('Failed to send admin assignment notification' + e))
+            .then(() => console.log('Admin assignment notification has been sent'));
         }
 
         // If notification should be sent to user
